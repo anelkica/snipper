@@ -1,0 +1,47 @@
+# Qt Creator & IDEs
+*.pro.user*
+*.user
+*.qm
+.qt/
+.qtc_clangd/
+
+# Build Directories 
+build*/
+out/
+bin/
+lib/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+_deps/
+
+# Visual Studio
+.vs/
+*.sln
+*.vcxproj
+*.filters
+*.proto.xml
+x64/
+Debug/
+Release/
+
+# OS Specific
+.DS_Store
+thumbs.db
+desktop.ini
+
+# Compiled Objects, Binaries
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+*.exe
+*.app
