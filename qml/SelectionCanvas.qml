@@ -1,4 +1,5 @@
 import QtQuick
+import snipper
 
 /*
     negative offset method :3
@@ -67,6 +68,7 @@ Window {
         y: root.selection.y
         width: root.selection.width
         height: root.selection.height
+        color: "transparent"
         visible: width > 0
         clip: true
 
@@ -110,7 +112,7 @@ Window {
 
         onWheel: (wheel) => {
             if (wheel.angleDelta.y > 0)
-                root.zoomLevel = Math.min(root.zoomLevel + 0.25, 10.0)
+                root.zoomLevel = Math.min(root.zoomLevel + 0.25, 5.0)
             else
                 root.zoomLevel = Math.max(root.zoomLevel - 0.25, 1.0)
         }
@@ -127,6 +129,30 @@ Window {
         }
 
         onReleased: {
+            function getPhysicalCropRect() {
+                const { x, y, width, height } = root.selection;
+                const { zoomLevel, Screen } = root;
+                const dpr = Screen.devicePixelRatio; // everyone has different monitors y'know
+
+                const realW = width / zoomLevel;
+                const realH = height / zoomLevel;
+
+                // get top-left by finding center and offsetting by half of selection rect size
+                const realX = (x + width / 2) - (realW / 2);
+                const realY = (y + height / 2) - (realH / 2);
+
+                return Qt.rect(
+                    Math.round(realX * dpr),
+                    Math.round(realY * dpr),
+                    Math.round(realW * dpr),
+                    Math.round(realH * dpr)
+                );
+            }
+
+            let croppedRect = getPhysicalCropRect();
+
+            SnipperManager.save_cropped_region(root.screenshot_source, croppedRect, root.zoomLevel);
+
             root.isDragging = false;
             root.zoomLevel = 1.0;
             root.stopCapturing();

@@ -11,17 +11,21 @@ class SnipperManager : public QObject
     QML_ELEMENT
     QML_SINGLETON
 
+    Q_PROPERTY(QString temp_path READ get_temp_path CONSTANT)
+
 public:
     explicit SnipperManager(QObject *parent = nullptr);
+    ~SnipperManager();
 
-    QQuickWindow* main_window() { return m_main_window; }
-    Q_INVOKABLE void set_main_window(QQuickWindow *window) { m_main_window = window; }
+    QString get_temp_path() const { return m_temp_path; }
 
-    Q_INVOKABLE void capture_screenshot();
+    Q_INVOKABLE void capture_screenshot(QQuickWindow *root_window);
+    Q_INVOKABLE void save_cropped_region(const QUrl &image_source, const QRect &crop_rect, const qreal zoom_factor);
+
 signals:
-    void screenshot_captured(const QImage &image);
+    void screenshot_captured(const QUrl &screenshot_url);
 private:
-    QQuickWindow *m_main_window = nullptr;
+    QString m_temp_path;
 };
 
 #endif // SNIPPER_MANAGER_H
