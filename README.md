@@ -37,6 +37,6 @@ Open the `snipper` folder in Qt Creator IDE to build and run the application.
     <p>A small glimpse with regards to user interface</p>
 </div>
 <div align="center">
-    <img width="400" height="400" src="docs/screenshots/snipper_demo_.gif">
+    <img width="400" height="400" src="docs/screenshots/snipper_demo.gif">
     <p>Region capture + magnification</p>
 </div>
