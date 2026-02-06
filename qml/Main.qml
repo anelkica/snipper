@@ -14,6 +14,7 @@ import snipper
         - keep gradient or nah?
         - maximize functionality?
         - previous snips?
+        - snake_case -> camelCase
 */
 
 ApplicationWindow {
@@ -36,6 +37,27 @@ ApplicationWindow {
         gradient: Gradient {
             GradientStop { position: 0.0; color: Qt.lighter(Style.bgPrimary, 1.1) }
             GradientStop { position: 1.0; color: Qt.darker(Style.bgPrimary, 1.15) }
+        }
+    }
+
+    Loader {
+        id: selectionCanvasLoader
+
+        anchors.fill: parent
+        active: false
+
+        source: "SelectionCanvas.qml"
+
+        Connections {
+            target: selectionCanvasLoader.item
+            ignoreUnknownSignals: true
+
+            function onStopCapturing() {
+                console.log("STOP ITTT");
+
+                selectionCanvasLoader.active = false;
+                root.showNormal();
+            }
         }
     }
 
@@ -83,6 +105,16 @@ ApplicationWindow {
 
             backgroundColor: Style.accent
             hoverColor: Style.accentHover
+
+            onClicked: SnipperManager.capture_screenshot(root)
+        }
+    }
+
+    Connections {
+        target: SnipperManager
+        function onScreenshot_captured(screenshot_url) {
+            selectionCanvasLoader.active = true;
+            selectionCanvasLoader.item.screenshot_source = screenshot_url;
         }
     }
 
