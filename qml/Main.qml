@@ -1,52 +1,90 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Window
+import QtQuick.Layouts
+import QtQuick.Effects
 import QtCore
 
+import "." // Style.qml
+import "components"
 import snipper
+
+/*
+    TODO:
+        - keep gradient or nah?
+        - maximize functionality?
+        - previous snips?
+*/
 
 ApplicationWindow {
     id: root
 
-    width: 400
-    height: 250
+    // + x <- drop shadow
+    minimumWidth: 512
+    minimumHeight: 256
     visible: true
 
-    title: "snipper"
+    flags: Qt.Window | Qt.FramelessWindowHint
+    color: "transparent"
 
-    Loader {
-        id: selection_canvas_loader
+    background: Rectangle {
+        color: Style.bgPrimary
+        radius: Style.radius
+        border.width: 1
+        border.color: Qt.rgba(1, 1, 1, 0.15)
 
-        anchors.fill: parent
-        active: false
-
-        source: "SelectionCanvas.qml"
-
-        Connections {
-            target: selection_canvas_loader.item
-            ignoreUnknownSignals: true
-
-            function onStopCapturing() {
-                selection_canvas_loader.active = false;
-
-
-                root.showNormal();
-            }
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: Qt.lighter(Style.bgPrimary, 1.1) }
+            GradientStop { position: 1.0; color: Qt.darker(Style.bgPrimary, 1.15) }
         }
-
-
     }
 
-    Button {
+    Rectangle {
+        id: titlebar
+
+        height: 40
+        color: "transparent"
+
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        z: 1 // for resize handles
+
+        FluentTitlebar {
+            anchors.fill: parent
+        }
+
+        DragHandler {
+            target: null
+            margin: 8 // for resize handles
+
+            onActiveChanged: if (active) root.startSystemMove()
+        }
+    }
+
+    // content
+    ColumnLayout {
         anchors.centerIn: parent
-        text: "New Snip"
-        onClicked: SnipperManager.capture_screenshot(root)
-    }
+        spacing: 12
 
-    Connections {
-        target: SnipperManager
-        function onScreenshot_captured(screenshot_url) {
-            selection_canvas_loader.active = true;
-            selection_canvas_loader.item.screenshot_source = screenshot_url;
+        Text {
+            Layout.alignment: Qt.AlignHCenter
+
+            text: "Ready to Snip!"
+            color: Style.textSecondary
+            font.weight: Font.Medium
+            font.pixelSize: 18
+        }
+
+        FluentButton {
+            Layout.alignment: Qt.AlignCenter
+            Layout.preferredWidth: parent.width * 0.75
+            text: "New"
+
+            backgroundColor: Style.accent
+            hoverColor: Style.accentHover
         }
     }
+
+    WindowResizeHandlers { z: 2 }
 }

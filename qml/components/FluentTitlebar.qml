@@ -1,0 +1,87 @@
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Window
+import QtQuick.Layouts
+import ".." // Style.qml
+
+// note: always match the titlebar button cornerRadius with window cornerRadius :)
+
+Rectangle {
+   id: titlebar
+
+   width: parent.width
+   height: 40
+   color: Qt.darker(Style.bgPrimary, 1.15)
+
+   topLeftRadius: Style.radius
+   topRightRadius: Style.radius
+
+   anchors {
+       fill: parent
+       margins: 1
+   }
+
+   property string title: "snipper"
+
+   RowLayout {
+       anchors.fill: parent
+       anchors.leftMargin: Style.spacingM
+       anchors.bottomMargin: 1 // for the bottom divider guy
+       spacing: 0
+
+       // cute activity icon :3
+       RowLayout {
+              spacing: 8
+
+              Rectangle {
+                  width: 8
+                  height: 8
+                  radius: 4
+
+                  color: Style.accent
+                  Layout.alignment: Qt.AlignVCenter
+                  Layout.topMargin: 2
+              }
+
+              Label {
+                  text: titlebar.title
+                  color: Style.textPrimary
+                  font.weight: Font.Medium
+                  font.pixelSize: 14
+                  Layout.alignment: Qt.AlignVCenter
+              }
+       }
+
+       Item { Layout.fillWidth: true } // spacer
+
+       FluentButton {
+           text: "—"
+           radius: 0
+
+           implicitWidth: 46
+
+           onClicked: Window.window.showMinimized()
+       }
+
+       FluentButton {
+           text: "✕"
+           radius: 0
+
+           hoverColor: "#a82319"
+           pressedColor: "#87231b"
+           topRightRadius: Style.radius
+
+           implicitWidth: 46
+
+           onClicked: Window.window.close()
+       }
+   }
+
+   // bottom divider line
+   Rectangle {
+       anchors.bottom: parent.bottom
+       width: parent.width
+       height: 1
+       color: Qt.rgba(1, 1, 1, 0.08)
+   }
+}

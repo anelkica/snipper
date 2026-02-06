@@ -5,17 +5,25 @@ project(snipper VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Quick)
+find_package(Qt6 REQUIRED COMPONENTS QuickControls2)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
 qt_add_executable(appsnipper src/main.cpp)
 
+set_source_files_properties(qml/Style.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+
 qt_add_qml_module(appsnipper
     URI snipper
     QML_FILES
         qml/Main.qml
         qml/SelectionCanvas.qml
+        qml/Style.qml
+        qml/Preview.qml
+        qml/components/FluentButton.qml
+        qml/components/FluentTitlebar.qml
+        qml/components/WindowResizeHandlers.qml
     SOURCES
         src/snipper_manager.h
         src/snipper_manager.cpp
@@ -38,6 +46,7 @@ target_link_libraries(appsnipper
     PRIVATE Qt6::Quick
 )
 target_link_libraries(appsnipper PRIVATE Qt6::Widgets)
+target_link_libraries(appsnipper PRIVATE Qt6::QuickControls2)
 
 include(GNUInstallDirs)
 install(TARGETS appsnipper
