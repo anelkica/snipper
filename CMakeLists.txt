@@ -10,7 +10,8 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
-qt_add_executable(appsnipper src/main.cpp)
+qt_add_resources(RESOURCES resources.qrc)
+qt_add_executable(appsnipper src/main.cpp ${RESOURCES})
 
 set_source_files_properties(qml/Style.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
@@ -27,6 +28,8 @@ qt_add_qml_module(appsnipper
     SOURCES
         src/snipper_manager.h
         src/snipper_manager.cpp
+    RESOURCES
+        resources.qrc
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

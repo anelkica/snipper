@@ -34,10 +34,10 @@ ApplicationWindow {
         border.width: 1
         border.color: Qt.rgba(1, 1, 1, 0.15)
 
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: Qt.lighter(Style.bgPrimary, 1.1) }
-            GradientStop { position: 1.0; color: Qt.darker(Style.bgPrimary, 1.15) }
-        }
+        // gradient: Gradient {
+        //     GradientStop { position: 0.0; color: Qt.lighter(Style.bgPrimary, 1.1) }
+        //     GradientStop { position: 1.0; color: Qt.darker(Style.bgPrimary, 1.15) }
+        // }
     }
 
     Loader {
@@ -53,7 +53,6 @@ ApplicationWindow {
             ignoreUnknownSignals: true
 
             function onStopCapturing() {
-                console.log("STOP ITTT");
 
                 selectionCanvasLoader.active = false;
                 root.showNormal();
@@ -84,29 +83,66 @@ ApplicationWindow {
         }
     }
 
-    // content
-    ColumnLayout {
-        anchors.centerIn: parent
-        spacing: 12
+    Rectangle {
+        id: toolbar
 
-        Text {
-            Layout.alignment: Qt.AlignHCenter
+        height: 40
+        width: Math.min(parent.width * 0.618, 640) // 640px maximum wdith
+        anchors.top: titlebar.bottom
+        anchors.topMargin: 16
+        anchors.horizontalCenter: parent.horizontalCenter
 
-            text: "Ready to Snip!"
-            color: Style.textSecondary
-            font.weight: Font.Medium
-            font.pixelSize: 18
-        }
+        color: Qt.lighter(Style.bgPrimary, 1.1)
+        radius: 24
+        border.color: Qt.rgba(1, 1, 1, 0.1)
 
-        FluentButton {
-            Layout.alignment: Qt.AlignCenter
-            Layout.preferredWidth: parent.width * 0.75
-            text: "New"
+        RowLayout {
+            anchors.fill: parent
+            spacing: 0
 
-            backgroundColor: Style.accent
-            hoverColor: Style.accentHover
+            FluentButton {
+                text: "Snip"
+                font.pixelSize: 14
+                spacing: 8
 
-            onClicked: SnipperManager.capture_screenshot(root)
+                icon.source: "qrc:/icons/scissors-cut-fill.svg"
+                icon.width: 18
+                icon.height: 18
+                icon.color: "white"
+
+                topLeftRadius: 24
+                bottomLeftRadius: 24
+                topRightRadius: 0
+                bottomRightRadius: 0
+
+                hoverColor: Qt.darker(Style.accent, 1.1)
+
+                Layout.fillWidth: true
+                Layout.preferredWidth: 0
+
+                onClicked: SnipperManager.capture_screenshot(root)
+            }
+
+            FluentButton {
+                text: "Copy"
+                font.pixelSize: 14
+                spacing: 8
+
+                icon.source: "qrc:/icons/file-copy-line.svg"
+                icon.width: 18
+                icon.height: 18
+                icon.color: "white"
+
+                topLeftRadius: 0
+                bottomLeftRadius: 0
+                topRightRadius: 24
+                bottomRightRadius: 24
+
+                hoverColor: Qt.darker(Style.accent, 1.1)
+
+                Layout.fillWidth: true
+                Layout.preferredWidth: 0
+            }
         }
     }
 

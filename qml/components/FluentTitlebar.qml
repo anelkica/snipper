@@ -29,18 +29,18 @@ Rectangle {
        anchors.bottomMargin: 1 // for the bottom divider guy
        spacing: 0
 
-       // cute activity icon :3
        RowLayout {
-              spacing: 8
+              spacing: 12
 
+              // cute activity icon :3
               Rectangle {
-                  width: 8
-                  height: 8
-                  radius: 4
+                  width: 12
+                  height: 12
+                  radius: 6
 
                   color: Style.accent
                   Layout.alignment: Qt.AlignVCenter
-                  Layout.topMargin: 2
+                  Layout.topMargin: 1.5
               }
 
               Label {

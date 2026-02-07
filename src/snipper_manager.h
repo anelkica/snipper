@@ -21,6 +21,7 @@ public:
 
     Q_INVOKABLE void capture_screenshot(QQuickWindow *root_window);
     Q_INVOKABLE void save_cropped_region(const QUrl &image_source, const QRect &crop_rect, const qreal zoom_factor);
+    Q_INVOKABLE void copyToClipboard(const QUrl &image_source);
 
 signals:
     void screenshot_captured(const QUrl &screenshot_url);

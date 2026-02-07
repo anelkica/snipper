@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Effects
 import ".." // Style.qml
 
 
@@ -24,16 +25,8 @@ Button {
     property color pressedColor: Style.bgPressed
     property real pixelSize: 12
 
+    scale: pressed ? 0.95 : 1.0
     padding: Style.padding
-
-    contentItem: Text {
-        text: button.text
-        color: button.hovered ? "#ffffff" : Style.textPrimary
-
-        font.pixelSize: button.pixelSize
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-    }
 
     background: Rectangle {
         anchors.fill: parent

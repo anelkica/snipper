@@ -7,6 +7,7 @@
 #include <QStandardPaths>
 #include <QDebug>
 #include <QDir>
+#include <QClipboard>
 
 SnipperManager::SnipperManager(QObject *parent) : QObject(parent) {
     m_temp_path = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/snipper/";
@@ -80,4 +81,14 @@ void SnipperManager::save_cropped_region(const QUrl &image_source_url, const QRe
 
     qDebug() << "Saved to: " << unique_filename_path;
     cropped_image.save(unique_filename_path);
+}
+
+void SnipperManager::copyToClipboard(const QUrl &imageSourceUrl) {
+    QString imageSourcePath = imageSourceUrl.toLocalFile();
+    QImage image(imageSourcePath);
+
+    if (image.isNull()) return;
+
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    clipboard->setImage(image);
 }
