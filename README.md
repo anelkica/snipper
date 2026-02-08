@@ -31,9 +31,14 @@ Open the `snipper` folder in Qt Creator IDE to build and run the application.
 - Color picking
 - *UNCERTAIN*: GIF recording
 
-## 🌄 Proof of concept 
+## 🎯 Todo
+- [x] ~~Magnification~~
+- [x] ~~Copy to clipboard~~
+- [ ] Screenshot preview
+
+## 🌄 Showcase
 <div align="center">
-    <img width="512" height="256" src="docs/screenshots/snipper_demo_ui.png">
+    <img width="512" height="256" src="https://github.com/user-attachments/assets/446c4d21-206b-4ea6-ba1d-2c158d7867e3">
     <p>A small glimpse with regards to user interface</p>
 </div>
 <div align="center">
