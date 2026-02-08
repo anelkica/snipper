@@ -28,6 +28,8 @@ ApplicationWindow {
     flags: Qt.Window | Qt.FramelessWindowHint
     color: "transparent"
 
+    property url currentScreenshotUrl
+
     background: Rectangle {
         color: Style.bgPrimary
         radius: Style.radius
@@ -40,12 +42,39 @@ ApplicationWindow {
         // }
     }
 
+    Connections {
+        target: SnipperManager
+
+        // signals in snipper_manager.h btw
+        function onScreenshotCaptured(screenshotUrl) {
+            root.currentScreenshotUrl = screenshotUrl;
+
+            selectionCanvasLoader.active = true;
+            selectionCanvasLoader.item.screenshotSource = screenshotUrl;
+        }
+
+        function onCropCopiedToClipboard() {
+            feedbackLabel.pulse("Copied to clipboard", false);
+            titlebar.statusColor = Style.success;
+        }
+
+        function onCropSaved(croppedImageUrl) {
+            feedbackLabel.pulse("Saved crop", false);
+            titlebar.statusColor = Style.success;
+        }
+
+        function onErrorOccurred(message) {
+            console.error("ERROR: ", message);
+            feedbackLabel.pulse(message, true);
+            titlebar.statusColor = Style.failure;
+        }
+    }
+
     Loader {
         id: selectionCanvasLoader
 
         anchors.fill: parent
         active: false
-
         source: "SelectionCanvas.qml"
 
         Connections {
@@ -53,7 +82,6 @@ ApplicationWindow {
             ignoreUnknownSignals: true
 
             function onStopCapturing() {
-
                 selectionCanvasLoader.active = false;
                 root.showNormal();
             }
@@ -61,7 +89,7 @@ ApplicationWindow {
     }
 
     Rectangle {
-        id: titlebar
+        id: titlebarContainer
 
         height: 40
         color: "transparent"
@@ -72,6 +100,7 @@ ApplicationWindow {
         z: 1 // for resize handles
 
         FluentTitlebar {
+            id: titlebar
             anchors.fill: parent
         }
 
@@ -88,7 +117,7 @@ ApplicationWindow {
 
         height: 40
         width: Math.min(parent.width * 0.618, 640) // 640px maximum wdith
-        anchors.top: titlebar.bottom
+        anchors.top: titlebarContainer.bottom
         anchors.topMargin: 16
         anchors.horizontalCenter: parent.horizontalCenter
 
@@ -120,7 +149,7 @@ ApplicationWindow {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 0
 
-                onClicked: SnipperManager.capture_screenshot(root)
+                onClicked: SnipperManager.requestCaptureScreenshot(root)
             }
 
             FluentButton {
@@ -142,15 +171,38 @@ ApplicationWindow {
 
                 Layout.fillWidth: true
                 Layout.preferredWidth: 0
+
+                onClicked: SnipperManager.requestCopyToClipboard(currentScreenshotUrl);
             }
         }
     }
 
-    Connections {
-        target: SnipperManager
-        function onScreenshot_captured(screenshot_url) {
-            selectionCanvasLoader.active = true;
-            selectionCanvasLoader.item.screenshot_source = screenshot_url;
+    Label {
+        id: feedbackLabel
+
+        text: "Saved.."
+        font.italic: true
+        font.letterSpacing: 1
+        color: "#3CB371"
+        opacity: 0
+        anchors.top: toolbar.bottom;
+        anchors.topMargin: 8
+        anchors.horizontalCenter: toolbar.horizontalCenter
+
+        function pulse(message, isError) {
+            feedbackLabel.text = message;
+            feedbackLabel.color = isError ? Qt.lighter(Style.failure, 1.2) : Qt.lighter(Style.success, 1.2);
+
+            feedbackAnimation.restart();
+        }
+
+        SequentialAnimation on opacity {
+            id: feedbackAnimation
+            running: false;
+
+            NumberAnimation { to: 1; duration: 200; easing.type: Easing.OutCubic }
+            PauseAnimation { duration: 2000 }
+            NumberAnimation { to: 0; duration: 800; easing.type: Easing.InCubic }
         }
     }
 

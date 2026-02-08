@@ -10,85 +10,133 @@
 #include <QClipboard>
 
 SnipperManager::SnipperManager(QObject *parent) : QObject(parent) {
-    m_temp_path = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/snipper/";
+    m_tempFolderPath = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/snipper/";
 
-    QDir temp_dir(m_temp_path);
-    if (!temp_dir.exists()) temp_dir.mkpath(".");
+    QDir tempFolder(m_tempFolderPath);
+    if (!tempFolder.exists()) tempFolder.mkpath(".");
 }
 
 SnipperManager::~SnipperManager() {
-    if (m_temp_path.isEmpty()) return; // we don't wanna bomb an entire random location lol
+    if (m_tempFolderPath.isEmpty()) return; // we don't wanna bomb an entire random location lol
 
-    QDir temp_dir(m_temp_path);
-    temp_dir.removeRecursively();
+    QDir tempFolder(m_tempFolderPath);
+    tempFolder.removeRecursively();
 }
 
 
-void SnipperManager::capture_screenshot(QQuickWindow *root_window) {
-    if (!root_window) {
-        qWarning() << "SnipperManager: No root window set!";
+std::expected<QUrl, QString> SnipperManager::captureScreenshot(QQuickWindow *rootWindow) {
+    if (!rootWindow)
+        return std::unexpected("No root window");
+
+    QScreen *screen = rootWindow->screen();
+    if (!screen) screen = QGuiApplication::primaryScreen();
+    if (!screen) return std::unexpected("No monitors found"); // seriously? how tf are u using a GUI with no monitors??
+
+    QPixmap screenshot = screen->grabWindow(0);
+    if (screenshot.isNull()) return std::unexpected("Failed to grab window");
+
+    QString filename = QString("snip_%1.png").arg(QDateTime::currentMSecsSinceEpoch());
+    QString fullPath = m_tempFolderPath + filename;
+
+    if (!screenshot.save(fullPath, "PNG")) return std::unexpected("Failed to save: " + fullPath);
+    return QUrl::fromLocalFile(fullPath);
+}
+
+std::expected<QUrl, QString> SnipperManager::saveCroppedRegion(const QUrl &imageSource, const QRect &cropRect, qreal zoom) {
+    if (imageSource.isEmpty())
+        return std::unexpected("Image source is missing");
+
+    if (!cropRect.isValid())
+        return std::unexpected("Invalid selection area");
+
+    QString imageSourcePath = imageSource.toLocalFile();
+    QImage image(imageSourcePath);
+    if (image.isNull()) return std::unexpected("Failed to load image from: " + imageSourcePath);
+
+    QImage croppedImage = image.copy(cropRect);
+
+    if (zoom > 1.0) {
+        const QSize size = croppedImage.size() * zoom;
+        croppedImage = croppedImage.scaled(size, Qt::KeepAspectRatio, Qt::FastTransformation);
+        // Qt::FastTransformation = nearest neighbor
+    }
+
+    QString desktopPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
+    QString filename =  "snip_" + QDateTime::currentDateTime().toString("yyyyMMdd__hhmmss") + ".png";
+    QString finalPath = desktopPath + '/' + filename;
+
+    if (!croppedImage.save(finalPath, "PNG"))
+        return std::unexpected("Failed to save: " + finalPath);
+
+    return QUrl::fromLocalFile(finalPath);
+}
+
+std::expected<void, QString> SnipperManager::copyToClipboard(const QUrl &imageSource) {
+    if (imageSource.isEmpty())
+        return std::unexpected("Image source is missing");
+
+    QString imageSourcePath = imageSource.toLocalFile();
+    QImage image(imageSourcePath);
+    if (image.isNull()) return std::unexpected("Failed to load image from: " + imageSourcePath);
+
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    if (!clipboard) return std::unexpected("Clipboard unavailable");
+
+    clipboard->setImage(image);
+    return {};
+}
+
+// == QML SIDE == //
+
+void SnipperManager::requestCaptureScreenshot(QQuickWindow *rootWindow) {
+    if (!rootWindow) {
+        emit errorOccurred("Can't capture: no main window found");
         return;
     }
 
-    root_window->showMinimized();
+    rootWindow->showMinimized();
 
-    // 365ms grace period for the app to hide
-    QTimer::singleShot(365, this, [this, root_window]() {
-        QScreen *screen = root_window->screen();
+    // 365ms waiting period for the window to minimize
+    QTimer::singleShot(365, this, [this, rootWindow] {
+        if (!rootWindow) return; // just in case tbh
 
-        if (!screen) screen = QGuiApplication::primaryScreen();
-        if (!screen) return; // do you not have a monitor??
+        auto result = captureScreenshot(rootWindow);
+        if (result)
+            emit screenshotCaptured(*result);
+        else
+            emit errorOccurred(result.error());
 
-        QPixmap screenshot = screen->grabWindow(0);
-
-        QString unique_filename = QString("snip_%1.png").arg(QDateTime::currentMSecsSinceEpoch());
-        QString full_screenshot_path = m_temp_path + unique_filename;
-
-        if (screenshot.save(full_screenshot_path, "PNG")) {
-            QUrl screenshot_url = QUrl::fromLocalFile(full_screenshot_path);
-
-            emit screenshot_captured(screenshot_url);
-
-        } else {
-            qWarning() << "SnipperManager: Failed to save screenshot: " << full_screenshot_path;
-        }
-
-        //root_window->raise();
-        //root_window->requestActivate();
+        rootWindow->showNormal();
     });
 }
 
-void SnipperManager::save_cropped_region(const QUrl &image_source_url, const QRect &crop_rect, const qreal zoom_factor) {
-    QString image_source_path = image_source_url.toLocalFile();
-
-    if (image_source_path.isEmpty() || crop_rect.isEmpty()) return;
-
-    QImage full_image(image_source_path);
-    if (full_image.isNull()) return;
-
-    QImage cropped_image = full_image.copy(crop_rect);
-
-    if (zoom_factor > 1.0) {
-        const int new_width = qRound(cropped_image.width() * zoom_factor);
-        const int new_height = qRound(cropped_image.height() * zoom_factor);
-
-        // Qt::FastTransformation = nearest neighbor
-        cropped_image = cropped_image.scaled(new_width, new_height, Qt::KeepAspectRatio, Qt::FastTransformation);
+void SnipperManager::requestCopyToClipboard(const QUrl &imageSource) {
+    if (imageSource.isEmpty()) {
+        emit errorOccurred("Nothing to copy");
+        return;
     }
 
-    QString desktop_path = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
-    QString unique_filename_path = desktop_path + "/snip_" + QDateTime::currentDateTime().toString("yyyyMMdd__hhmmss") + ".png";
-
-    qDebug() << "Saved to: " << unique_filename_path;
-    cropped_image.save(unique_filename_path);
+    auto result = copyToClipboard(imageSource);
+    if (result)
+        emit cropCopiedToClipboard();
+    else
+        emit errorOccurred(result.error());
 }
 
-void SnipperManager::copyToClipboard(const QUrl &imageSourceUrl) {
-    QString imageSourcePath = imageSourceUrl.toLocalFile();
-    QImage image(imageSourcePath);
+void SnipperManager::requestSaveCroppedRegion(const QUrl &imageSource, const QRect &cropRect, qreal zoom) {
+    if (imageSource.isEmpty()) {
+        emit errorOccurred("Can't save: invalid image source");
+        return;
+    }
 
-    if (image.isNull()) return;
+    if (!cropRect.isValid()) {
+        emit errorOccurred("Can't save: invalid selection area");
+        return;
+    }
 
-    QClipboard *clipboard = QGuiApplication::clipboard();
-    clipboard->setImage(image);
+    auto result = saveCroppedRegion(imageSource, cropRect, zoom);
+    if (result)
+        emit cropSaved(*result);
+    else
+        emit errorOccurred(result.error());
 }

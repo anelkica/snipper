@@ -14,17 +14,9 @@ import snipper
         - it shifts in the opposite direction of the box
 
         - the zooming is done using this formula on an image:
-        - x = -(selection_box_center * zoom_level) + (selection_box_center)
+        - x = -(selectionBox_center * zoomLevel) + (selectionBox_center)
 
     !! potential negative: rendering two images :p !!
-
-    however i can't find a better approach, this one is very customizable
-    best i can think of is QPainter which imo tanks the CPU
-*/
-
-/*
-    == TODO ==
-    - add flashing animation after snip
 */
 
 Window {
@@ -34,9 +26,9 @@ Window {
     visibility: Window.FullScreen
     color: "transparent"
 
-    property string screenshot_source: ""
+    property string screenshotSource: ""
     property rect selection: Qt.rect(0, 0, 0, 0)
-    property point start_point
+    property point startPoint
 
     property real zoomLevel: 1.0
     property bool isDragging: false
@@ -48,9 +40,9 @@ Window {
         id: background
 
         anchors.fill: parent
-        source: root.screenshot_source
-        sourceSize.width: Screen.width
-        sourceSize.height: Screen.height
+        source: root.screenshotSource
+        sourceSize.width: Screen.width * Screen.devicePixelRatio // without dpr, the screenshot is blurry
+        sourceSize.height: Screen.height * Screen.devicePixelRatio
         cache: false
 
         // dimming
@@ -62,7 +54,7 @@ Window {
 
     // -- LAYER 2 -> SELECTION BOX
     Rectangle {
-        id: selection_box
+        id: selectionBox
 
         x: root.selection.x
         y: root.selection.y
@@ -74,7 +66,7 @@ Window {
 
         // border
         Rectangle {
-            id: selection_box_border
+            id: selectionBoxBorder
 
             anchors.fill: parent
             color: "transparent"
@@ -91,8 +83,8 @@ Window {
             width: background.width * root.zoomLevel
             height: background.height * root.zoomLevel
 
-            x: -((selection_box.x + selection_box.width / 2) * root.zoomLevel) + (selection_box.width / 2)
-            y: -((selection_box.y + selection_box.height / 2) * root.zoomLevel) + (selection_box.height / 2)
+            x: -((selectionBox.x + selectionBox.width / 2) * root.zoomLevel) + (selectionBox.width / 2)
+            y: -((selectionBox.y + selectionBox.height / 2) * root.zoomLevel) + (selectionBox.height / 2)
 
             smooth: false
         }
@@ -106,7 +98,7 @@ Window {
 
         onPressed: (mouse) => {
             root.isDragging = true
-            root.start_point = Qt.point(mouse.x, mouse.y)
+            root.startPoint = Qt.point(mouse.x, mouse.y)
             root.selection = Qt.rect(mouse.x, mouse.y, 0, 0)
         }
 
@@ -121,10 +113,10 @@ Window {
             if (!pressed) return;
 
             root.selection = Qt.rect(
-                Math.min(mouse.x, root.start_point.x),
-                Math.min(mouse.y, root.start_point.y),
-                Math.abs(mouse.x - root.start_point.x),
-                Math.abs(mouse.y - root.start_point.y)
+                Math.min(mouse.x, root.startPoint.x),
+                Math.min(mouse.y, root.startPoint.y),
+                Math.abs(mouse.x - root.startPoint.x),
+                Math.abs(mouse.y - root.startPoint.y)
             );
         }
 
@@ -132,12 +124,11 @@ Window {
             function getPhysicalCropRect() {
                 const { x, y, width, height } = root.selection;
                 const { zoomLevel, Screen } = root;
-                const dpr = Screen.devicePixelRatio; // everyone has different monitors y'know
+                const dpr = Screen.devicePixelRatio;
 
                 const realW = width / zoomLevel;
                 const realH = height / zoomLevel;
 
-                // get top-left by finding center and offsetting by half of selection rect size
                 const realX = (x + width / 2) - (realW / 2);
                 const realY = (y + height / 2) - (realH / 2);
 
@@ -151,13 +142,12 @@ Window {
 
             let croppedRect = getPhysicalCropRect();
 
-            SnipperManager.save_cropped_region(root.screenshot_source, croppedRect, root.zoomLevel);
+            SnipperManager.requestSaveCroppedRegion(root.screenshotSource, croppedRect, root.zoomLevel);
 
             root.isDragging = false;
             root.zoomLevel = 1.0;
             root.stopCapturing();
         }
-
     }
 
     Shortcut {

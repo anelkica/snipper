@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Window
 import QtQuick.Layouts
+import QtQuick.Effects
 import ".." // Style.qml
 
 // note: always match the titlebar button cornerRadius with window cornerRadius :)
@@ -22,6 +23,9 @@ Rectangle {
    }
 
    property string title: "snipper"
+   property color statusColor: Style.accent
+
+   onStatusColorChanged: resetTimer.restart()
 
    RowLayout {
        anchors.fill: parent
@@ -34,13 +38,33 @@ Rectangle {
 
               // cute activity icon :3
               Rectangle {
+                  id: activity_icon
                   width: 12
                   height: 12
                   radius: 6
 
-                  color: Style.accent
+                  color: titlebar.statusColor
                   Layout.alignment: Qt.AlignVCenter
                   Layout.topMargin: 1.5
+
+                  Timer {
+                     id: resetTimer
+                     interval: 3500
+                     onTriggered: titlebar.statusColor = Style.accent
+                  }
+
+                  Behavior on color {
+                     ColorAnimation { duration: 400; easing.type: Easing.InOutQuad }
+                  }
+
+                  layer.enabled: true
+                  layer.effect: MultiEffect {
+                     blurEnabled: true
+                     blur: 0.15
+
+                     brightness: 0.2
+                     contrast: 0.2
+                  }
               }
 
               Label {
