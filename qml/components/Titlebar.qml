@@ -78,7 +78,7 @@ Rectangle {
 
        Item { Layout.fillWidth: true } // spacer
 
-       FluentButton {
+       SnipperButton {
            text: "—"
            radius: 0
 
@@ -87,7 +87,7 @@ Rectangle {
            onClicked: Window.window.showMinimized()
        }
 
-       FluentButton {
+       SnipperButton {
            text: "✕"
            radius: 0
 

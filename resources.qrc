@@ -2,5 +2,8 @@
     <qresource prefix="/">
         <file>icons/file-copy-line.svg</file>
         <file>icons/scissors-cut-fill.svg</file>
+        <file>icons/pushpin-line.svg</file>
+        <file>qml/FloatingImageWindow.qml</file>
+        <file>icons/save-3-fill.svg</file>
     </qresource>
 </RCC>

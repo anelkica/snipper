@@ -3,24 +3,25 @@ import QtQuick.Controls
 import QtQuick.Window
 import QtQuick.Layouts
 import QtQuick.Effects
+import QtQuick.Dialogs
 import QtCore
 
 import "." // Style.qml
 import "components"
-import snipper
+import snipper // SnipperManager, WindowManager
 
 /*
     TODO:
         - keep gradient or nah?
         - maximize functionality?
         - previous snips?
-        - snake_case -> camelCase
 */
 
 ApplicationWindow {
     id: root
 
-    // + x <- drop shadow
+    property url currentScreenshotUrl
+
     minimumWidth: 512
     minimumHeight: 256
     visible: true
@@ -28,7 +29,7 @@ ApplicationWindow {
     flags: Qt.Window | Qt.FramelessWindowHint
     color: "transparent"
 
-    property url currentScreenshotUrl
+    onClosing: Qt.quit() // to kill all leftover windows
 
     background: Rectangle {
         color: Style.bgPrimary
@@ -50,7 +51,7 @@ ApplicationWindow {
             root.currentScreenshotUrl = screenshotUrl;
 
             selectionCanvasLoader.active = true;
-            selectionCanvasLoader.item.screenshotSource = screenshotUrl;
+            selectionCanvasLoader.item.currentScreenshotUrl = screenshotUrl;
         }
 
         function onCropCopiedToClipboard() {
@@ -61,7 +62,20 @@ ApplicationWindow {
         function onCropSaved(croppedImageUrl) {
             feedbackLabel.pulse("Saved crop", false);
             titlebar.statusColor = Style.success;
+
+            currentScreenshotUrl = croppedImageUrl
+            preview.source = croppedImageUrl
         }
+
+        function onErrorOccurred(message) {
+            console.error("ERROR: ", message);
+            feedbackLabel.pulse(message, true);
+            titlebar.statusColor = Style.failure;
+        }
+    }
+
+    Connections {
+        target: WindowManager
 
         function onErrorOccurred(message) {
             console.error("ERROR: ", message);
@@ -88,123 +102,166 @@ ApplicationWindow {
         }
     }
 
-    Rectangle {
-        id: titlebarContainer
+    ColumnLayout {
+        anchors.fill: parent
+        spacing: 0
 
-        height: 40
-        color: "transparent"
+        Rectangle {
+            id: titlebarContainer
+            Layout.fillWidth: true
+            Layout.preferredHeight: 40
+            color: "transparent"
+            z: 1
 
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-        z: 1 // for resize handles
-
-        FluentTitlebar {
-            id: titlebar
-            anchors.fill: parent
-        }
-
-        DragHandler {
-            target: null
-            margin: 8 // for resize handles
-
-            onActiveChanged: if (active) root.startSystemMove()
-        }
-    }
-
-    Rectangle {
-        id: toolbar
-
-        height: 40
-        width: Math.min(parent.width * 0.618, 640) // 640px maximum wdith
-        anchors.top: titlebarContainer.bottom
-        anchors.topMargin: 16
-        anchors.horizontalCenter: parent.horizontalCenter
-
-        color: Qt.lighter(Style.bgPrimary, 1.1)
-        radius: 24
-        border.color: Qt.rgba(1, 1, 1, 0.1)
-
-        RowLayout {
-            anchors.fill: parent
-            spacing: 0
-
-            FluentButton {
-                text: "Snip"
-                font.pixelSize: 14
-                spacing: 8
-
-                icon.source: "qrc:/icons/scissors-cut-fill.svg"
-                icon.width: 18
-                icon.height: 18
-                icon.color: "white"
-
-                topLeftRadius: 24
-                bottomLeftRadius: 24
-                topRightRadius: 0
-                bottomRightRadius: 0
-
-                hoverColor: Qt.darker(Style.accent, 1.1)
-
-                Layout.fillWidth: true
-                Layout.preferredWidth: 0
-
-                onClicked: SnipperManager.requestCaptureScreenshot(root)
+            Titlebar {
+                id: titlebar
+                anchors.fill: parent
             }
 
-            FluentButton {
-                text: "Copy"
-                font.pixelSize: 14
-                spacing: 8
+            DragHandler {
+                target: null
+                margin: 8
+                onActiveChanged: if (active) root.startSystemMove()
+            }
+        }
 
-                icon.source: "qrc:/icons/file-copy-line.svg"
-                icon.width: 18
-                icon.height: 18
-                icon.color: "white"
+        Rectangle {
+            id: toolbar
+            Layout.alignment: Qt.AlignHCenter
+            Layout.topMargin: 16
+            Layout.preferredHeight: 40
+            Layout.preferredWidth: Math.min(parent.width * 0.8, 640)
 
-                topLeftRadius: 0
-                bottomLeftRadius: 0
-                topRightRadius: 24
-                bottomRightRadius: 24
+            color: Qt.lighter(Style.bgPrimary, 1.1)
+            radius: 24
+            border.color: Qt.rgba(1, 1, 1, 0.1)
 
-                hoverColor: Qt.darker(Style.accent, 1.1)
+            RowLayout {
+                anchors.fill: parent
+                spacing: 0
 
-                Layout.fillWidth: true
-                Layout.preferredWidth: 0
+                SnipperButton {
+                    text: "Snip"
+                    font.pixelSize: 14
 
-                onClicked: SnipperManager.requestCopyToClipboard(currentScreenshotUrl);
+                    icon.source: "qrc:/icons/scissors-cut-fill.svg"
+                    icon.width: 18
+                    icon.height: 18
+                    icon.color: "white"
+
+                    radius: 0
+                    topLeftRadius: 24
+                    bottomLeftRadius: 24
+
+                    hoverColor: Qt.darker(Style.accent, 1.1)
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 0
+
+                    onClicked: SnipperManager.requestCaptureScreenshot(root)
+                }
+
+                SnipperButton {
+                    text: "Copy"
+                    font.pixelSize: 14
+
+                    icon.source: "qrc:/icons/file-copy-line.svg"
+                    icon.width: 18
+                    icon.height: 18
+                    icon.color: "white"
+
+                    radius: 0
+
+                    hoverColor: Qt.darker(Style.accent, 1.1)
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 0
+
+                    onClicked: SnipperManager.requestCopyToClipboard(currentScreenshotUrl)
+                }
+
+                SnipperButton {
+                    text: "Pin"
+                    font.pixelSize: 14
+
+                    icon.source: "qrc:/icons/pushpin-line.svg"
+                    icon.width: 18
+                    icon.height: 18
+                    icon.color: "white"
+
+                    radius: 0
+
+                    hoverColor: Qt.darker(Style.accent, 1.1)
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 0
+
+                    onClicked: WindowManager.requestCreatePinWindow(currentScreenshotUrl)
+                }
+
+                SnipperButton {
+                    text: "Save"
+                    font.pixelSize: 14
+
+                    icon.source: "qrc:/icons/save-3-fill.svg"
+                    icon.width: 18
+                    icon.height: 18
+                    icon.color: "white"
+
+                    radius: 0
+                    topRightRadius: 24
+                    bottomRightRadius: 24
+
+                    hoverColor: Qt.darker(Style.accent, 1.1)
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 0
+
+                    onClicked: {}
+                }
+            }
+        }
+
+        Label {
+            id: feedbackLabel
+            Layout.alignment: Qt.AlignHCenter
+            Layout.topMargin: 8
+
+            text: "Saved.."
+            font.italic: true
+            font.letterSpacing: 1
+            color: "#3CB371"
+            opacity: 0
+
+            function pulse(message, isError) {
+                feedbackLabel.text = message;
+                feedbackLabel.color = isError ? Qt.lighter(Style.failure, 1.2) : Qt.lighter(Style.success, 1.2);
+                feedbackAnimation.restart();
+            }
+
+            SequentialAnimation on opacity {
+                id: feedbackAnimation
+                running: false
+                NumberAnimation { to: 1; duration: 200; easing.type: Easing.OutCubic }
+                PauseAnimation { duration: 2000 }
+                NumberAnimation { to: 0; duration: 800; easing.type: Easing.InCubic }
+            }
+        }
+
+        Item {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.margins: 20
+
+            Image {
+                id: preview
+                anchors.fill: parent
+                fillMode: Image.PreserveAspectFit
+                source: root.currentScreenshotUrl
+
+                smooth: true
+                mipmap: true
+                antialiasing: true
             }
         }
     }
 
-    Label {
-        id: feedbackLabel
-
-        text: "Saved.."
-        font.italic: true
-        font.letterSpacing: 1
-        color: "#3CB371"
-        opacity: 0
-        anchors.top: toolbar.bottom;
-        anchors.topMargin: 8
-        anchors.horizontalCenter: toolbar.horizontalCenter
-
-        function pulse(message, isError) {
-            feedbackLabel.text = message;
-            feedbackLabel.color = isError ? Qt.lighter(Style.failure, 1.2) : Qt.lighter(Style.success, 1.2);
-
-            feedbackAnimation.restart();
-        }
-
-        SequentialAnimation on opacity {
-            id: feedbackAnimation
-            running: false;
-
-            NumberAnimation { to: 1; duration: 200; easing.type: Easing.OutCubic }
-            PauseAnimation { duration: 2000 }
-            NumberAnimation { to: 0; duration: 800; easing.type: Easing.InCubic }
-        }
-    }
 
     WindowResizeHandlers { z: 2 }
 }

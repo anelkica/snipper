@@ -1,3 +1,5 @@
+#include "window_manager.h"
+
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQuickStyle>
@@ -17,6 +19,10 @@ int main(int argc, char *argv[])
         []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
     engine.loadFromModule("snipper", "Main");
+
+    WindowManager* windowManager = engine.singletonInstance<WindowManager*>("snipper", "WindowManager");
+    if (windowManager)
+        windowManager->setEngine(&engine);
 
     return app.exec();
 }

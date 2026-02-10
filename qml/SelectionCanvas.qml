@@ -26,7 +26,7 @@ Window {
     visibility: Window.FullScreen
     color: "transparent"
 
-    property string screenshotSource: ""
+    property string currentScreenshotUrl: ""
     property rect selection: Qt.rect(0, 0, 0, 0)
     property point startPoint
 
@@ -35,12 +35,17 @@ Window {
 
     signal stopCapturing()
 
+    Shortcut {
+        sequence: "Esc"
+        onActivated: root.stopCapturing()
+    }
+
     // -- LAYER 1 -> DARKENED IMAGE
     Image {
         id: background
 
         anchors.fill: parent
-        source: root.screenshotSource
+        source: root.currentScreenshotUrl
         sourceSize.width: Screen.width * Screen.devicePixelRatio // without dpr, the screenshot is blurry
         sourceSize.height: Screen.height * Screen.devicePixelRatio
         cache: false
@@ -142,16 +147,11 @@ Window {
 
             let croppedRect = getPhysicalCropRect();
 
-            SnipperManager.requestSaveCroppedRegion(root.screenshotSource, croppedRect, root.zoomLevel);
+            SnipperManager.requestSaveCroppedRegion(root.currentScreenshotUrl, croppedRect, root.zoomLevel);
 
             root.isDragging = false;
             root.zoomLevel = 1.0;
             root.stopCapturing();
         }
-    }
-
-    Shortcut {
-        sequence: "Esc"
-        onActivated: root.stopCapturing()
     }
 }

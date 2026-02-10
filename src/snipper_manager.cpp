@@ -61,14 +61,13 @@ std::expected<QUrl, QString> SnipperManager::saveCroppedRegion(const QUrl &image
         // Qt::FastTransformation = nearest neighbor
     }
 
-    QString desktopPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
-    QString filename =  "snip_" + QDateTime::currentDateTime().toString("yyyyMMdd__hhmmss") + ".png";
-    QString finalPath = desktopPath + '/' + filename;
+    QString filename = QString("snip_%1.png").arg(QDateTime::currentDateTime().toString("yyyyMMdd__hhmmss"));
+    QString fullPath = m_tempFolderPath + filename;
 
-    if (!croppedImage.save(finalPath, "PNG"))
-        return std::unexpected("Failed to save: " + finalPath);
+    if (!croppedImage.save(fullPath, "PNG"))
+        return std::unexpected("Failed to save: " + fullPath);
 
-    return QUrl::fromLocalFile(finalPath);
+    return QUrl::fromLocalFile(fullPath);
 }
 
 std::expected<void, QString> SnipperManager::copyToClipboard(const QUrl &imageSource) {

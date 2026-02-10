@@ -21,14 +21,17 @@ qt_add_qml_module(appsnipper
     QML_FILES
         qml/Main.qml
         qml/SelectionCanvas.qml
+        qml/FloatingImageWindow.qml
         qml/Style.qml
-        qml/Preview.qml
-        qml/components/FluentButton.qml
-        qml/components/FluentTitlebar.qml
+
+        qml/components/SnipperButton.qml
+        qml/components/Titlebar.qml
         qml/components/WindowResizeHandlers.qml
     SOURCES
         src/snipper_manager.h
         src/snipper_manager.cpp
+        src/window_manager.h
+        src/window_manager.cpp
     RESOURCES
         resources.qrc
 )
