@@ -85,6 +85,32 @@ std::expected<void, QString> SnipperManager::copyToClipboard(const QUrl &imageSo
     return {};
 }
 
+std::expected<QUrl, QString> SnipperManager::saveCropAs(const QUrl &imageSource, const QUrl &userSelectedPath) {
+    if (imageSource.isEmpty())
+        return std::unexpected("Image source is missing");
+
+    if (userSelectedPath.isEmpty())
+        return std::unexpected("Destination path is invalid");
+
+    QString sourcePath = imageSource.toLocalFile();
+    QString destinationPath = userSelectedPath.toLocalFile();
+
+    QFile sourceFile(sourcePath);
+    if (!sourceFile.exists())
+        return std::unexpected("Source image doesn't exist");
+
+    if (QFile::exists(destinationPath)) {
+        // QFile::copy fails when overwriting, so lets remove the guy
+        if (!QFile::remove(destinationPath))
+            return std::unexpected("Couldn't overwrite existing file"); // epic fail
+    }
+
+    if (sourceFile.copy(destinationPath))
+        return QUrl::fromLocalFile(destinationPath);
+    else
+        return std::unexpected("Failed to save: " + sourceFile.errorString());
+}
+
 // == QML SIDE == //
 
 void SnipperManager::requestCaptureScreenshot(QQuickWindow *rootWindow) {
@@ -136,6 +162,24 @@ void SnipperManager::requestSaveCroppedRegion(const QUrl &imageSource, const QRe
     auto result = saveCroppedRegion(imageSource, cropRect, zoom);
     if (result)
         emit cropSaved(*result);
+    else
+        emit errorOccurred(result.error());
+}
+
+void SnipperManager::requestSaveCropAs(const QUrl &imageSource, const QUrl &userSelectedPath) {
+    if (imageSource.isEmpty()) {
+        emit errorOccurred("Can't save: invalid image source");
+        return;
+    }
+
+    if (userSelectedPath.isEmpty()) {
+        emit errorOccurred("Can't save: destination path is invalid");
+        return;
+    }
+
+    auto result = saveCropAs(imageSource, userSelectedPath);
+    if (result)
+        qDebug();
     else
         emit errorOccurred(result.error());
 }

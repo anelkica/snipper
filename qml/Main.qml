@@ -60,7 +60,7 @@ ApplicationWindow {
         }
 
         function onCropSaved(croppedImageUrl) {
-            feedbackLabel.pulse("Saved crop", false);
+            feedbackLabel.pulse("Cached crop", false);
             titlebar.statusColor = Style.success;
 
             currentScreenshotUrl = croppedImageUrl
@@ -81,6 +81,22 @@ ApplicationWindow {
             console.error("ERROR: ", message);
             feedbackLabel.pulse(message, true);
             titlebar.statusColor = Style.failure;
+        }
+    }
+
+    FileDialog {
+        id: saveCropDialog
+
+        title: "Save Snip As"
+        fileMode: FileDialog.SaveFile
+        nameFilters: ["Image files (*.png *.jpg)", "All files (*)"]
+        defaultSuffix: "png"
+
+        onAccepted: {
+            SnipperManager.requestSaveCropAs(root.currentScreenshotUrl, saveCropDialog.selectedFile)
+
+            feedbackLabel.pulse("Saved!", false);
+            titlebar.statusColor = Style.success;
         }
     }
 
@@ -213,7 +229,7 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     Layout.preferredWidth: 0
 
-                    onClicked: {}
+                    onClicked: if (root.currentScreenshotUrl != "") saveCropDialog.open();
                 }
             }
         }

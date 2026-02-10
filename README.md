@@ -1,11 +1,11 @@
 # ✂️ snipper
 A minimalist, useful and performant screen capture utility made with C++ and Qt QML.
 
-[View screenshots (no pun intended)](#-proof-of-concept)
+[View screenshots (no pun intended)](#-showcase)
 
 ## 🛠️ Installation
 ### Requirements
-- C++20 compatible compiler
+- C++23 compatible compiler
 - CMake 3.16 or higher
 - Qt 6
 
@@ -25,6 +25,10 @@ Open the `snipper` folder in Qt Creator IDE to build and run the application.
 - Magnification
   - Scroll up/down while snipping
   - Save magnified snips
+- Floating pins
+  - Create floating stay-on-top snips
+  - *SOON:* opacity
+- Saving snips
 
 ## 💫 Planned features..
 - EasyOCR
@@ -34,14 +38,28 @@ Open the `snipper` folder in Qt Creator IDE to build and run the application.
 ## 🎯 Todo
 - [x] ~~Magnification~~
 - [x] ~~Copy to clipboard~~
-- [ ] Screenshot preview
+- [x] ~~Screenshot preview~~
+- [x] ~~Picture-in-picture windows~~
+- [x] ~~Save As functionality~~
+- [ ] Settings for customizability
+- [ ] Floating toolbar in snipping mode
 
 ## 🌄 Showcase
+### snipper UI
 <div align="center">
-    <img width="512" height="256" src="https://github.com/user-attachments/assets/446c4d21-206b-4ea6-ba1d-2c158d7867e3">
-    <p>A small glimpse with regards to user interface</p>
+    <img width="512" height="256" src="docs/screenshots/snipper_demo_ui.png">
 </div>
 <div align="center">
-    <img width="400" height="400" src="docs/screenshots/snipper_demo.gif">
-    <p>Region capture + magnification</p>
+    <img width="512" height="256" src="docs/screenshots/failure.gif">
+</div>
+
+### Snipping and magnification
+<div align="center">
+    <img width="342" height="342" src="docs/screenshots/snipping_magnification.gif">
+</div>
+
+### Creating pinnable images
+<div align="center">
+    <img width="542" height="305" src="docs/screenshots/pin.gif">
+    <p><i>right click to remove</i></p>
 </div>
