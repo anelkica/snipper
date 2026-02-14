@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Layouts
 import snipper
 
 /*
@@ -38,6 +39,73 @@ Window {
     Shortcut {
         sequence: "Esc"
         onActivated: root.stopCapturing()
+    }
+
+    Rectangle {
+        id: selectionToolbar
+
+        anchors.top: parent.top
+        anchors.topMargin: 20
+        anchors.horizontalCenter: parent.horizontalCenter
+
+        width: toolbarRow.implicitWidth + 40
+        height: 48
+
+        visible: opacity > 0
+        opacity: root.isDragging ? 0.0 : 1.0
+
+        Behavior on opacity {
+            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+        }
+
+        color: Qt.alpha("#1A1A1A", 0.75)
+        radius: 24
+        border.color: Qt.rgba(1, 1, 1, 0.15)
+        border.width: 1
+
+        z: 2
+
+        RowLayout {
+            id: toolbarRow
+            anchors.centerIn: parent
+            spacing: 12
+
+            // -- Placeholder Buttons -- //
+
+            SnipperButton {
+                icon.source: "qrc:/icons/crop-2-fill.svg"
+                icon.width: 18
+                icon.height: 18
+                icon.color: "white"
+
+                Layout.preferredWidth: 48
+            }
+            SnipperButton {
+                icon.source: "qrc:/icons/sip-line.svg"
+                icon.width: 18
+                icon.height: 18
+                icon.color: "white"
+
+                Layout.preferredWidth: 48
+            }
+
+            Rectangle {
+                width: 1
+                height: 20
+                color: Qt.rgba(1, 1, 1, 0.2)
+            }
+
+            SnipperButton {
+                text: "✕"
+
+                hoverColor: "#a82319"
+                pressedColor: "#87231b"
+                topRightRadius: Style.radius
+
+                onClicked: root.stopCapturing()
+                Layout.preferredWidth: 48
+            }
+        }
     }
 
     // -- LAYER 1 -> DARKENED IMAGE

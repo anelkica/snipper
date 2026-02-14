@@ -5,5 +5,9 @@
         <file>icons/pushpin-line.svg</file>
         <file>qml/FloatingImageWindow.qml</file>
         <file>icons/save-3-fill.svg</file>
+        <file>icons/add-large-fill.svg</file>
+        <file>icons/sip-line.svg</file>
+        <file>icons/crop-2-fill.svg</file>
+        <file>icons/fullscreen-line.svg</file>
     </qresource>
 </RCC>

@@ -2,7 +2,7 @@ pragma Singleton
 import QtQuick
 
 QtObject {
-    readonly property color bgPrimary:     "#1f232a"
+    readonly property color bgPrimary:     "#161b22"
     readonly property color bgSecondary:   "#242424"
     readonly property color bgTertiary:    "#2f2f2f"
 
