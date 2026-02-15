@@ -39,7 +39,8 @@ std::expected<QQuickWindow*, QString> WindowManager::createPinWindow(const QUrl 
 
     m_pinnedWindows.insert(imageSourceUrl, window);
 
-    connect(window, &QObject::destroyed, this, [this, imageSourceUrl] {
+    // &QQuickWindow::closing if the user tries ALT+F4 or closing via other means
+    connect(window, &QQuickWindow::closing, this, [this, imageSourceUrl] {
         // when exited, clean up the list containg all pinned windows
         m_pinnedWindows.remove(imageSourceUrl);
     });
@@ -54,6 +55,48 @@ std::expected<QQuickWindow*, QString> WindowManager::createPinWindow(const QUrl 
     window->show();
 
     return window;
+}
+
+std::expected<void, QString> WindowManager::removePinWindow(const QUrl &imageSourceUrl) {
+    if (imageSourceUrl.isEmpty())
+        return std::unexpected("Can't remove pin: Invalid image source");
+
+    if (!m_pinnedWindows.contains(imageSourceUrl))
+        return std::unexpected("Pin doesn't exist.");
+
+    QPointer<QQuickWindow> window = m_pinnedWindows.take(imageSourceUrl);
+    if (!window)
+        return std::unexpected("Pin was already lost or destroyed."); // already null, but not removed???
+
+    window->close();
+    window->deleteLater();
+
+    return {};
+}
+
+std::expected<qsizetype, QString> WindowManager::raiseAllPins() {
+    if (m_pinnedWindows.isEmpty())
+        return std::unexpected("No pins to raise");
+
+    auto iterator = m_pinnedWindows.begin();
+    while (iterator != m_pinnedWindows.end()) {
+        QPointer<QQuickWindow> pin = iterator.value();
+
+        if (!pin) {
+            iterator = m_pinnedWindows.erase(iterator); // update it bcuz it wasn't deleted :p
+            continue;
+        }
+
+        pin->raise();
+        pin->requestActivate();
+
+        pin->setProperty("clickThrough", false);
+        pin->setFlags(pin->flags() & ~Qt::WindowTransparentForInput);
+
+        ++iterator;
+    }
+
+    return m_pinnedWindows.size();
 }
 
 // == QML SIDE == //
@@ -71,4 +114,20 @@ void WindowManager::requestCreatePinWindow(const QUrl &imageSourceUrl) {
     }
 
     emit pinCreated(result.value());
+}
+
+void WindowManager::requestRaiseAllPins() {
+    auto result = raiseAllPins();
+    if (result)
+        emit raisedAllPins(result.value());
+    else
+        emit errorOccurred(result.error());
+}
+
+void WindowManager::requestRemovePinWindow(const QUrl &imageSourceUrl) {
+    auto result = removePinWindow(imageSourceUrl);
+    if (result)
+        emit pinRemoved();
+    else
+        emit errorOccurred(result.error());
 }

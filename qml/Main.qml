@@ -34,6 +34,13 @@ ApplicationWindow {
         // }
     }
 
+    Shortcut {
+        sequence: "CTRL+T"
+        context: Qt.ApplicationShortcut
+
+        onActivated: WindowManager.requestRaiseAllPins();
+    }
+
     Connections {
         target: SnipperManager
 
@@ -62,7 +69,6 @@ ApplicationWindow {
         }
 
         function onErrorOccurred(message) {
-            console.error("ERROR: ", message);
             feedbackLabel.pulse(message, true);
             titlebar.statusColor = Style.failure;
         }
@@ -71,9 +77,13 @@ ApplicationWindow {
     Connections {
         target: WindowManager
         function onErrorOccurred(message) {
-            console.error("ERROR: ", message);
             feedbackLabel.pulse(message, true);
             titlebar.statusColor = Style.failure;
+        }
+
+        function onRaisedAllPins(amountOfPins) {
+            feedbackLabel.pulse(`Pins raised: ${amountOfPins}`, false);
+            titlebar.statusColor = Style.success;
         }
     }
 

@@ -16,13 +16,18 @@ public:
     void setEngine(QQmlEngine *engine) { m_engine = engine; }
 
     std::expected<QQuickWindow*, QString> createPinWindow(const QUrl &imageSourceUrl);
+    std::expected<void, QString> removePinWindow(const QUrl &imageSourceUrl);
+    std::expected<qsizetype, QString> raiseAllPins();
 
-
+    Q_INVOKABLE void requestRaiseAllPins();
     Q_INVOKABLE void requestCreatePinWindow(const QUrl &imageSourceUrl);
+    Q_INVOKABLE void requestRemovePinWindow(const QUrl &imageSourceUrl);
 
 signals:
     void errorOccurred(const QString &message);
     void pinCreated(QQuickWindow* pinWindow);
+    void pinRemoved();
+    void raisedAllPins(qsizetype amountOfPins);
 
 private:
     QQmlEngine *m_engine = nullptr;

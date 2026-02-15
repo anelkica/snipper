@@ -26,4 +26,6 @@ QtObject {
     readonly property real  spacingM:       12.0
     readonly property real  padding:        8.0
     readonly property real  radius:         8.0
+
+    readonly property color  locked:        "#FFDAA520" // specifically for the clickthrough window border
 }
