@@ -125,9 +125,15 @@ void SnipperManager::requestCaptureScreenshot(QQuickWindow *rootWindow) {
     QTimer::singleShot(365, this, [this, rootWindow] {
         if (!rootWindow) return; // just in case tbh
 
+        QScreen* screen = rootWindow->screen();
+        if (!screen) {
+            emit errorOccurred("Monitor not found");
+            return;
+        }
+
         auto result = captureScreenshot(rootWindow);
         if (result)
-            emit screenshotCaptured(*result);
+            emit screenshotCaptured(*result, screen);
         else
             emit errorOccurred(result.error());
 

@@ -32,7 +32,7 @@ public:
     Q_INVOKABLE void requestSaveCropAs(const QUrl &imageSource, const QUrl &userSelectedPath);
 
 signals:
-    void screenshotCaptured(const QUrl &screenshotUrl);
+    void screenshotCaptured(const QUrl &screenshotUrl, QScreen *currentScreen);
     void cropSaved(const QUrl &croppedImageUrl);
     void cropCopiedToClipboard();
     void errorOccurred(const QString &message);

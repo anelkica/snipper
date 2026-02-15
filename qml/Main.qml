@@ -6,16 +6,8 @@ import QtQuick.Effects
 import QtQuick.Dialogs
 import QtCore
 
-import "." // Style.qml
 import "components"
 import snipper // SnipperManager, WindowManager
-
-/*
-    TODO:
-        - keep gradient or nah?
-        - maximize functionality?
-        - previous snips?
-*/
 
 ApplicationWindow {
     id: root
@@ -25,11 +17,10 @@ ApplicationWindow {
     minimumWidth: 512
     minimumHeight: 256
     visible: true
-
     flags: Qt.Window | Qt.FramelessWindowHint
     color: "transparent"
 
-    onClosing: Qt.quit() // to kill all leftover windows
+    onClosing: Qt.quit()
 
     background: Rectangle {
         color: Style.bgPrimary
@@ -38,20 +29,24 @@ ApplicationWindow {
         border.color: Qt.rgba(1, 1, 1, 0.15)
 
         // gradient: Gradient {
-        //     GradientStop { position: 0.0; color: Qt.lighter(Style.bgPrimary, 1.1) }
-        //     GradientStop { position: 1.0; color: Qt.darker(Style.bgPrimary, 1.15) }
+        //      GradientStop { position: 0.0; color: Qt.lighter(Style.bgPrimary, 1.1) }
+        //      GradientStop { position: 1.0; color: Qt.darker(Style.bgPrimary, 1.15) }
         // }
     }
 
     Connections {
         target: SnipperManager
 
-        // signals in snipper_manager.h btw
-        function onScreenshotCaptured(screenshotUrl) {
+        function onScreenshotCaptured(screenshotUrl, currentScreen) {
             root.currentScreenshotUrl = screenshotUrl;
 
             selectionCanvasLoader.active = true;
-            selectionCanvasLoader.item.currentScreenshotUrl = screenshotUrl;
+
+            let canvas = selectionCanvasLoader.item;
+            if (canvas) {
+                canvas.screen = currentScreen;
+                canvas.currentScreenshotUrl = screenshotUrl;
+            }
         }
 
         function onCropCopiedToClipboard() {
@@ -62,9 +57,8 @@ ApplicationWindow {
         function onCropSaved(croppedImageUrl) {
             feedbackLabel.pulse("Cached crop", false);
             titlebar.statusColor = Style.success;
-
-            currentScreenshotUrl = croppedImageUrl
-            preview.source = croppedImageUrl
+            currentScreenshotUrl = croppedImageUrl;
+            preview.source = croppedImageUrl;
         }
 
         function onErrorOccurred(message) {
@@ -76,7 +70,6 @@ ApplicationWindow {
 
     Connections {
         target: WindowManager
-
         function onErrorOccurred(message) {
             console.error("ERROR: ", message);
             feedbackLabel.pulse(message, true);
@@ -86,7 +79,6 @@ ApplicationWindow {
 
     FileDialog {
         id: saveCropDialog
-
         title: "Save Snip As"
         fileMode: FileDialog.SaveFile
         nameFilters: ["Image files (*.png *.jpg)", "All files (*)"]
@@ -94,7 +86,6 @@ ApplicationWindow {
 
         onAccepted: {
             SnipperManager.requestSaveCropAs(root.currentScreenshotUrl, saveCropDialog.selectedFile)
-
             feedbackLabel.pulse("Saved!", false);
             titlebar.statusColor = Style.success;
         }
@@ -102,15 +93,12 @@ ApplicationWindow {
 
     Loader {
         id: selectionCanvasLoader
-
-        anchors.fill: parent
         active: false
         source: "SelectionCanvas.qml"
 
         Connections {
             target: selectionCanvasLoader.item
             ignoreUnknownSignals: true
-
             function onStopCapturing() {
                 selectionCanvasLoader.active = false;
                 root.showNormal();
@@ -118,10 +106,12 @@ ApplicationWindow {
         }
     }
 
+
     ColumnLayout {
         anchors.fill: parent
         spacing: 0
 
+        // -- Titlebar -- //
         Rectangle {
             id: titlebarContainer
             Layout.fillWidth: true
@@ -141,13 +131,13 @@ ApplicationWindow {
             }
         }
 
+         // -- Toolbar (under Titlebar) -- //
         Rectangle {
             id: toolbar
             Layout.alignment: Qt.AlignHCenter
             Layout.topMargin: 16
             Layout.preferredHeight: 40
             Layout.preferredWidth: Math.min(parent.width * 0.8, 640)
-
             color: Qt.lighter(Style.bgPrimary, 1.1)
             radius: 24
             border.color: Qt.rgba(1, 1, 1, 0.1)
@@ -159,89 +149,56 @@ ApplicationWindow {
                 SnipperButton {
                     text: "Snip"
                     font.pixelSize: 14
-
                     icon.source: "qrc:/icons/scissors-cut-fill.svg"
-                    icon.width: 18
-                    icon.height: 18
-                    icon.color: "white"
-
-                    radius: 0
-                    topLeftRadius: 24
-                    bottomLeftRadius: 24
-
+                    icon.width: 18; icon.height: 18; icon.color: "white"
+                    radius: 0; topLeftRadius: 24; bottomLeftRadius: 24
                     hoverColor: Qt.darker(Style.accent, 1.1)
-                    Layout.fillWidth: true
-                    Layout.preferredWidth: 0
-
+                    Layout.fillWidth: true; Layout.preferredWidth: 0
                     onClicked: SnipperManager.requestCaptureScreenshot(root)
                 }
 
                 SnipperButton {
                     text: "Copy"
                     font.pixelSize: 14
-
                     icon.source: "qrc:/icons/file-copy-line.svg"
-                    icon.width: 18
-                    icon.height: 18
-                    icon.color: "white"
-
+                    icon.width: 18; icon.height: 18; icon.color: "white"
                     radius: 0
-
                     hoverColor: Qt.darker(Style.accent, 1.1)
-                    Layout.fillWidth: true
-                    Layout.preferredWidth: 0
-
+                    Layout.fillWidth: true; Layout.preferredWidth: 0
                     onClicked: SnipperManager.requestCopyToClipboard(currentScreenshotUrl)
                 }
 
                 SnipperButton {
                     text: "Pin"
                     font.pixelSize: 14
-
                     icon.source: "qrc:/icons/pushpin-line.svg"
-                    icon.width: 18
-                    icon.height: 18
-                    icon.color: "white"
-
+                    icon.width: 18; icon.height: 18; icon.color: "white"
                     radius: 0
-
                     hoverColor: Qt.darker(Style.accent, 1.1)
-                    Layout.fillWidth: true
-                    Layout.preferredWidth: 0
-
+                    Layout.fillWidth: true; Layout.preferredWidth: 0
                     onClicked: WindowManager.requestCreatePinWindow(currentScreenshotUrl)
                 }
 
                 SnipperButton {
                     text: "Save"
                     font.pixelSize: 14
-
                     icon.source: "qrc:/icons/save-3-fill.svg"
-                    icon.width: 18
-                    icon.height: 18
-                    icon.color: "white"
-
-                    radius: 0
-                    topRightRadius: 24
-                    bottomRightRadius: 24
-
+                    icon.width: 18; icon.height: 18; icon.color: "white"
+                    radius: 0; topRightRadius: 24; bottomRightRadius: 24
                     hoverColor: Qt.darker(Style.accent, 1.1)
-                    Layout.fillWidth: true
-                    Layout.preferredWidth: 0
-
-                    onClicked: if (root.currentScreenshotUrl != "") saveCropDialog.open();
+                    Layout.fillWidth: true; Layout.preferredWidth: 0
+                    onClicked: if (root.currentScreenshotUrl != "") saveCropDialog.open()
                 }
             }
         }
 
+         // -- Status Text under Toolbar -- //
         Label {
             id: feedbackLabel
             Layout.alignment: Qt.AlignHCenter
             Layout.topMargin: 8
-
             text: "Saved.."
-            font.italic: true
-            font.letterSpacing: 1
+            font.italic: true; font.letterSpacing: 1
             color: "#3CB371"
             opacity: 0
 
@@ -260,6 +217,7 @@ ApplicationWindow {
             }
         }
 
+         // -- Preview Image after Snipping -- //
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -270,14 +228,10 @@ ApplicationWindow {
                 anchors.fill: parent
                 fillMode: Image.PreserveAspectFit
                 source: root.currentScreenshotUrl
-
-                smooth: true
-                mipmap: true
-                antialiasing: true
+                smooth: true; mipmap: true; antialiasing: true
             }
         }
     }
-
 
     WindowResizeHandlers { z: 2 }
 }
