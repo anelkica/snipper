@@ -20,6 +20,7 @@ QtObject {
     readonly property color textSecondary: "#d6d6d6"
     readonly property color textDisabled:  "#5c5c5c"
 
+    readonly property color windowBorder:   Qt.rgba(1, 1, 1, 0.15)
     readonly property color borderMain:    "#2a2f38"
     readonly property color borderLight:   "#2d2d2d"
 

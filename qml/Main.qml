@@ -13,6 +13,7 @@ ApplicationWindow {
     id: root
 
     property url currentScreenshotUrl
+    property bool isPickingColor: false
 
     minimumWidth: 512
     minimumHeight: 256
@@ -35,10 +36,38 @@ ApplicationWindow {
     }
 
     Shortcut {
+        sequence: "Escape"
+        context: Qt.ApplicationShortcut
+
+        onActivated: {
+            isPickingColor = !isPickingColor
+        }
+    }
+
+    Shortcut {
         sequence: "CTRL+T"
         context: Qt.ApplicationShortcut
 
         onActivated: WindowManager.requestRaiseAllPins();
+    }
+
+    // moves the color picker window smoothly, matching the Hz of the monitor
+    FrameAnimation {
+        running: isPickingColor
+
+        onTriggered: {
+            let colorPicker = colorPickerLoader.item;
+            if (!colorPicker) return;
+
+            let data = SnipperManager.requestColorAtCursor()
+            if (!data.success) return;
+
+            colorPicker.x = data.globalCursorPosition.x + 15
+            colorPicker.y = data.globalCursorPosition.y + 15
+
+            colorPicker.pickerColor = data.pickedColor
+            colorPicker.colorName = data.hex
+        }
     }
 
     Connections {
@@ -102,6 +131,25 @@ ApplicationWindow {
     }
 
     Loader {
+        id: colorPickerLoader
+        active: root.isPickingColor
+        source: "components/ColorPickerDisplay.qml"
+
+        Connections {
+            target: colorPickerLoader.item
+            ignoreUnknownSignals: true
+
+            function onColorPicked(globalCursorPosition, color, hexColor) {
+                let colorPicker = colorPickerLoader.item
+
+                if (!colorPicker || !root.isPickingColor) return;
+
+                colorPicker.updateColorPicker(globalCursorPosition, hexColor, color)
+            }
+        }
+    }
+
+    Loader {
         id: selectionCanvasLoader
         active: false
         source: "SelectionCanvas.qml"
@@ -122,85 +170,10 @@ ApplicationWindow {
         spacing: 0
 
         // -- Titlebar -- //
-        Rectangle {
-            id: titlebarContainer
-            Layout.fillWidth: true
-            Layout.preferredHeight: 40
-            color: "transparent"
-            z: 1
-
-            Titlebar {
-                id: titlebar
-                anchors.fill: parent
-            }
-
-            DragHandler {
-                target: null
-                margin: 8
-                onActiveChanged: if (active) root.startSystemMove()
-            }
-        }
+        Titlebar { id: titlebar }
 
          // -- Toolbar (under Titlebar) -- //
-        Rectangle {
-            id: toolbar
-            Layout.alignment: Qt.AlignHCenter
-            Layout.topMargin: 16
-            Layout.preferredHeight: 40
-            Layout.preferredWidth: Math.min(parent.width * 0.8, 640)
-            color: Qt.lighter(Style.bgPrimary, 1.1)
-            radius: 24
-            border.color: Qt.rgba(1, 1, 1, 0.1)
-
-            RowLayout {
-                anchors.fill: parent
-                spacing: 0
-
-                SnipperButton {
-                    text: "Snip"
-                    font.pixelSize: 14
-                    icon.source: "qrc:/icons/scissors-cut-fill.svg"
-                    icon.width: 18; icon.height: 18; icon.color: "white"
-                    radius: 0; topLeftRadius: 24; bottomLeftRadius: 24
-                    hoverColor: Qt.darker(Style.accent, 1.1)
-                    Layout.fillWidth: true; Layout.preferredWidth: 0
-                    onClicked: SnipperManager.requestCaptureScreenshot(root)
-                }
-
-                SnipperButton {
-                    text: "Copy"
-                    font.pixelSize: 14
-                    icon.source: "qrc:/icons/file-copy-line.svg"
-                    icon.width: 18; icon.height: 18; icon.color: "white"
-                    radius: 0
-                    hoverColor: Qt.darker(Style.accent, 1.1)
-                    Layout.fillWidth: true; Layout.preferredWidth: 0
-                    onClicked: SnipperManager.requestCopyToClipboard(currentScreenshotUrl)
-                }
-
-                SnipperButton {
-                    text: "Pin"
-                    font.pixelSize: 14
-                    icon.source: "qrc:/icons/pushpin-line.svg"
-                    icon.width: 18; icon.height: 18; icon.color: "white"
-                    radius: 0
-                    hoverColor: Qt.darker(Style.accent, 1.1)
-                    Layout.fillWidth: true; Layout.preferredWidth: 0
-                    onClicked: WindowManager.requestCreatePinWindow(currentScreenshotUrl)
-                }
-
-                SnipperButton {
-                    text: "Save"
-                    font.pixelSize: 14
-                    icon.source: "qrc:/icons/save-3-fill.svg"
-                    icon.width: 18; icon.height: 18; icon.color: "white"
-                    radius: 0; topRightRadius: 24; bottomRightRadius: 24
-                    hoverColor: Qt.darker(Style.accent, 1.1)
-                    Layout.fillWidth: true; Layout.preferredWidth: 0
-                    onClicked: if (root.currentScreenshotUrl != "") saveCropDialog.open()
-                }
-            }
-        }
+        MainToolbar { id: toolbar }
 
          // -- Status Text under Toolbar -- //
         Label {

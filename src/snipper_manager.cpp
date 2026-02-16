@@ -1,6 +1,7 @@
 #include "snipper_manager.h"
 
 #include <QGuiApplication>
+#include <QCursor>
 #include <QScreen>
 #include <QPixmap>
 #include <QTimer>
@@ -111,6 +112,26 @@ std::expected<QUrl, QString> SnipperManager::saveCropAs(const QUrl &imageSource,
         return std::unexpected("Failed to save: " + sourceFile.errorString());
 }
 
+std::expected<QPair<QPoint, QColor>, QString> SnipperManager::pickColorAtCursor() {
+    QPoint globalCursorPosition = QCursor::pos();
+    QScreen *screen = QGuiApplication::screenAt(globalCursorPosition);
+
+    if (!screen) return std::unexpected("No screen found");
+
+    // 1x1 pixmap located at the cursor position
+    QPixmap pixmap = screen->grabWindow(0, globalCursorPosition.x(), globalCursorPosition.y(), 1, 1);
+    if (pixmap.isNull())
+        return std::unexpected("Failed to grab pixel");
+
+    QImage image = pixmap.toImage();
+    if (image.isNull() || image.size().isEmpty())
+        return std::unexpected("Failed to convert pixels, or image is empty");
+
+    QColor pixelColor = image.pixelColor(0, 0);
+
+    return QPair<QPoint, QColor>(globalCursorPosition, pixelColor);
+}
+
 // == QML SIDE == //
 
 void SnipperManager::requestCaptureScreenshot(QQuickWindow *rootWindow) {
@@ -188,4 +209,25 @@ void SnipperManager::requestSaveCropAs(const QUrl &imageSource, const QUrl &user
         qDebug();
     else
         emit errorOccurred(result.error());
+}
+
+QVariantMap SnipperManager::requestColorAtCursor() {
+    QVariantMap map;
+
+    auto result = pickColorAtCursor();
+    if (result) {
+        QColor pickedColor = result->second;
+        QString hexColor = pickedColor.name().toUpper();
+
+        map["success"] = true;
+
+        map["globalCursorPosition"] = result->first;
+        map["pickedColor"] = result->second;
+        map["hex"] = hexColor;
+    } else {
+        map["success"] = false;
+        map["error"] = result.error();
+    }
+
+    return map;
 }

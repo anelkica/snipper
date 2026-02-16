@@ -3,109 +3,99 @@ import QtQuick.Controls
 import QtQuick.Window
 import QtQuick.Layouts
 import QtQuick.Effects
-import ".." // Style.qml
-
-// note: always match the titlebar button cornerRadius with window cornerRadius :)
+import ".."
 
 Rectangle {
-   id: titlebar
+    id: titlebarRoot
 
-   width: parent.width
-   height: 40
-   color: Qt.darker(Style.bgPrimary, 1.15)
+    property string title: "snipper"
+    property color statusColor: Style.accent
 
-   topLeftRadius: Style.radius
-   topRightRadius: Style.radius
+    radius: Style.radius
+    border.width: 1
+    border.color: Qt.rgba(1, 1, 1, 0.05)
 
-   anchors {
-       fill: parent
-       margins: 1
-   }
+    Layout.fillWidth: true
+    Layout.preferredHeight: 40
 
-   property string title: "snipper"
-   property color statusColor: Style.accent
+    color: Qt.darker(Style.bgPrimary, 1.15)
 
-   onStatusColorChanged: resetTimer.restart()
+    topLeftRadius: Style.radius
+    topRightRadius: Style.radius
+    bottomLeftRadius: 0
+    bottomRightRadius: 0
 
-   RowLayout {
-       anchors.fill: parent
-       anchors.leftMargin: Style.spacingM
-       anchors.bottomMargin: 1 // for the bottom divider guy
-       spacing: 0
+    z: 1
 
-       RowLayout {
-              spacing: 12
+    // Integrated Dragging Logic
+    DragHandler {
+        target: null
+        onActiveChanged: if (active) root.startSystemMove()
+    }
 
-              // cute activity icon :3
-              Rectangle {
-                  id: activity_icon
-                  width: 12
-                  height: 12
-                  radius: 6
+    onStatusColorChanged: resetTimer.restart()
 
-                  color: titlebar.statusColor
-                  Layout.alignment: Qt.AlignVCenter
-                  Layout.topMargin: 1.5
+    RowLayout {
+        anchors.fill: parent
+        anchors.topMargin: 1 // prevents buttons from overlapping with the app border
+        anchors.leftMargin: Style.spacingM
+        spacing: 0
 
-                  Timer {
-                     id: resetTimer
-                     interval: 3500
-                     onTriggered: titlebar.statusColor = Style.accent
-                  }
+        RowLayout {
+            spacing: 12
+            Rectangle {
+                id: activity_icon
+                width: 10; height: 10; radius: 5
+                color: titlebarRoot.statusColor
+                Layout.alignment: Qt.AlignVCenter
 
-                  Behavior on color {
-                     ColorAnimation { duration: 400; easing.type: Easing.InOutQuad }
-                  }
+                Timer {
+                    id: resetTimer
+                    interval: 3500
+                    onTriggered: titlebarRoot.statusColor = Style.accent
+                }
 
-                  layer.enabled: true
-                  layer.effect: MultiEffect {
-                     blurEnabled: true
-                     blur: 0.15
+                Behavior on color { ColorAnimation { duration: 400 } }
 
-                     brightness: 0.2
-                     contrast: 0.2
-                  }
-              }
+                layer.enabled: true
+                layer.effect: MultiEffect { blurEnabled: true; blur: 0.15; brightness: 0.2 }
+            }
 
-              Label {
-                  text: titlebar.title
-                  color: Style.textPrimary
-                  font.weight: Font.Medium
-                  font.pixelSize: 14
-                  Layout.alignment: Qt.AlignVCenter
-              }
-       }
+            Label {
+                text: titlebarRoot.title
+                color: Style.textPrimary
+                font.weight: Font.Medium
+                font.pixelSize: 13
+                Layout.alignment: Qt.AlignVCenter
+            }
+        }
 
-       Item { Layout.fillWidth: true } // spacer
+        Item { Layout.fillWidth: true } // Spacer
 
-       SnipperButton {
-           text: "—"
-           radius: 0
+        AppButton {
+            text: "—"
+            radius: 0
+            implicitWidth: 58
+            Layout.fillHeight: true
+            onClicked: root.showMinimized()
+        }
 
-           implicitWidth: 46
+        AppButton {
+            text: "✕"
+            radius: 0
+            hoverColor: "#a82319"
+            pressedColor: "#87231b"
+            topRightRadius: Style.radius
+            implicitWidth: 58
+            Layout.fillHeight: true
+            onClicked: root.close()
+        }
+    }
 
-           onClicked: Window.window.showMinimized()
-       }
-
-       SnipperButton {
-           text: "✕"
-           radius: 0
-
-           hoverColor: "#a82319"
-           pressedColor: "#87231b"
-           topRightRadius: Style.radius
-
-           implicitWidth: 46
-
-           onClicked: Window.window.close()
-       }
-   }
-
-   // bottom divider line
-   Rectangle {
-       anchors.bottom: parent.bottom
-       width: parent.width
-       height: 1
-       color: Qt.rgba(1, 1, 1, 0.08)
-   }
+    Rectangle {
+        anchors.bottom: parent.bottom
+        width: parent.width
+        height: 1
+        color: Qt.rgba(1, 1, 1, 0.08)
+    }
 }

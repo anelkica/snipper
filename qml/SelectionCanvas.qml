@@ -1,5 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Window
+import QtQuick.Controls
 import snipper
 
 /*
@@ -21,7 +23,7 @@ import snipper
 */
 
 Window {
-    id: root
+    id: canvasRoot
 
     flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
     visibility: Window.FullScreen
@@ -38,7 +40,9 @@ Window {
 
     Shortcut {
         sequence: "Esc"
-        onActivated: root.stopCapturing()
+        onActivated: {
+            canvasRoot.stopCapturing()
+        }
     }
 
     Rectangle {
@@ -52,14 +56,14 @@ Window {
         height: 48
 
         visible: opacity > 0
-        opacity: root.isDragging ? 0.0 : 1.0
+        opacity: canvasRoot.isDragging ? 0.0 : 1.0
 
         Behavior on opacity {
             NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
         }
 
-        color: Qt.alpha("#1A1A1A", 0.75)
-        radius: 24
+        color: Qt.alpha(Style.bgPrimary, 0.75)
+        radius: Style.radius
         border.color: Qt.rgba(1, 1, 1, 0.15)
         border.width: 1
 
@@ -72,16 +76,8 @@ Window {
 
             // -- Placeholder Buttons -- //
 
-            SnipperButton {
+            AppButton {
                 icon.source: "qrc:/icons/crop-2-fill.svg"
-                icon.width: 18
-                icon.height: 18
-                icon.color: "white"
-
-                Layout.preferredWidth: 48
-            }
-            SnipperButton {
-                icon.source: "qrc:/icons/sip-line.svg"
                 icon.width: 18
                 icon.height: 18
                 icon.color: "white"
@@ -95,14 +91,13 @@ Window {
                 color: Qt.rgba(1, 1, 1, 0.2)
             }
 
-            SnipperButton {
+            AppButton {
                 text: "✕"
 
                 hoverColor: "#a82319"
                 pressedColor: "#87231b"
-                topRightRadius: Style.radius
 
-                onClicked: root.stopCapturing()
+                onClicked: canvasRoot.stopCapturing()
                 Layout.preferredWidth: 48
             }
         }
@@ -113,7 +108,7 @@ Window {
         id: background
 
         anchors.fill: parent
-        source: root.currentScreenshotUrl
+        source: canvasRoot.currentScreenshotUrl
         sourceSize.width: Screen.width * Screen.devicePixelRatio // without dpr, the screenshot is blurry
         sourceSize.height: Screen.height * Screen.devicePixelRatio
         cache: false
@@ -129,10 +124,10 @@ Window {
     Rectangle {
         id: selectionBox
 
-        x: root.selection.x
-        y: root.selection.y
-        width: root.selection.width
-        height: root.selection.height
+        x: canvasRoot.selection.x
+        y: canvasRoot.selection.y
+        width: canvasRoot.selection.width
+        height: canvasRoot.selection.height
         color: "transparent"
         visible: width > 0
         clip: true
@@ -156,8 +151,8 @@ Window {
             width: background.width * root.zoomLevel
             height: background.height * root.zoomLevel
 
-            x: -((selectionBox.x + selectionBox.width / 2) * root.zoomLevel) + (selectionBox.width / 2)
-            y: -((selectionBox.y + selectionBox.height / 2) * root.zoomLevel) + (selectionBox.height / 2)
+            x: -((selectionBox.x + selectionBox.width / 2) * canvasRoot.zoomLevel) + (selectionBox.width / 2)
+            y: -((selectionBox.y + selectionBox.height / 2) * canvasRoot.zoomLevel) + (selectionBox.height / 2)
 
             smooth: false
         }
@@ -170,33 +165,33 @@ Window {
         hoverEnabled: true
 
         onPressed: (mouse) => {
-            root.isDragging = true
-            root.startPoint = Qt.point(mouse.x, mouse.y)
-            root.selection = Qt.rect(mouse.x, mouse.y, 0, 0)
+            canvasRoot.isDragging = true
+            canvasRoot.startPoint = Qt.point(mouse.x, mouse.y)
+            canvasRoot.selection = Qt.rect(mouse.x, mouse.y, 0, 0)
         }
 
         onWheel: (wheel) => {
             if (wheel.angleDelta.y > 0)
-                root.zoomLevel = Math.min(root.zoomLevel + 0.25, 5.0)
+                canvasRoot.zoomLevel = Math.min(canvasRoot.zoomLevel + 0.25, 5.0)
             else
-                root.zoomLevel = Math.max(root.zoomLevel - 0.25, 1.0)
+                canvasRoot.zoomLevel = Math.max(canvasRoot.zoomLevel - 0.25, 1.0)
         }
 
         onPositionChanged: (mouse) => {
             if (!pressed) return;
 
-            root.selection = Qt.rect(
-                Math.min(mouse.x, root.startPoint.x),
-                Math.min(mouse.y, root.startPoint.y),
-                Math.abs(mouse.x - root.startPoint.x),
-                Math.abs(mouse.y - root.startPoint.y)
+            canvasRoot.selection = Qt.rect(
+                Math.min(mouse.x, canvasRoot.startPoint.x),
+                Math.min(mouse.y, canvasRoot.startPoint.y),
+                Math.abs(mouse.x - canvasRoot.startPoint.x),
+                Math.abs(mouse.y - canvasRoot.startPoint.y)
             );
         }
 
         onReleased: {
             function getPhysicalCropRect() {
-                const { x, y, width, height } = root.selection;
-                const { zoomLevel, Screen } = root;
+                const { x, y, width, height } = canvasRoot.selection;
+                const { zoomLevel, Screen } = canvasRoot;
                 const dpr = Screen.devicePixelRatio;
 
                 const realW = width / zoomLevel;
@@ -215,11 +210,11 @@ Window {
 
             let croppedRect = getPhysicalCropRect();
 
-            SnipperManager.requestSaveCroppedRegion(root.currentScreenshotUrl, croppedRect, root.zoomLevel);
+            SnipperManager.requestSaveCroppedRegion(canvasRoot.currentScreenshotUrl, croppedRect, canvasRoot.zoomLevel);
 
-            root.isDragging = false;
-            root.zoomLevel = 1.0;
-            root.stopCapturing();
+            canvasRoot.isDragging = false;
+            canvasRoot.zoomLevel = 1.0;
+            canvasRoot.stopCapturing();
         }
     }
 }
