@@ -62,8 +62,9 @@ ApplicationWindow {
             let data = SnipperManager.requestColorAtCursor()
             if (!data.success) return;
 
-            colorPicker.x = data.globalCursorPosition.x + 15
-            colorPicker.y = data.globalCursorPosition.y + 15
+            // this centers the rascal to the cursor
+            colorPicker.x = data.globalCursorPosition.x - (colorPicker.width / 2)
+            colorPicker.y = data.globalCursorPosition.y - (colorPicker.height / 2)
 
             colorPicker.pickerColor = data.pickedColor
             colorPicker.colorName = data.hex
@@ -139,12 +140,14 @@ ApplicationWindow {
             target: colorPickerLoader.item
             ignoreUnknownSignals: true
 
-            function onColorPicked(globalCursorPosition, color, hexColor) {
-                let colorPicker = colorPickerLoader.item
+            function onColorAccepted(hex) {
+                root.isPickingColor = false
 
-                if (!colorPicker || !root.isPickingColor) return;
+                let success = SnipperManager.requestCopyTextToClipboard(hex)
+                if (!success) return;
 
-                colorPicker.updateColorPicker(globalCursorPosition, hexColor, color)
+                feedbackLabel.pulse(`Copied ${hex} to clipboard`, false);
+                titlebar.statusColor = Style.success;
             }
         }
     }
@@ -169,10 +172,8 @@ ApplicationWindow {
         anchors.fill: parent
         spacing: 0
 
-        // -- Titlebar -- //
         Titlebar { id: titlebar }
 
-         // -- Toolbar (under Titlebar) -- //
         MainToolbar { id: toolbar }
 
          // -- Status Text under Toolbar -- //

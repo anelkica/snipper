@@ -24,7 +24,6 @@ SnipperManager::~SnipperManager() {
     tempFolder.removeRecursively();
 }
 
-
 std::expected<QUrl, QString> SnipperManager::captureScreenshot(QQuickWindow *rootWindow) {
     if (!rootWindow)
         return std::unexpected("No root window");
@@ -86,6 +85,17 @@ std::expected<void, QString> SnipperManager::copyToClipboard(const QUrl &imageSo
     return {};
 }
 
+std::expected<void, QString> SnipperManager::copyTextToClipboard(const QString &text) {
+    if (text.isEmpty())
+        return std::unexpected("Nothing to copy");
+
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    if (!clipboard) return std::unexpected("Clipboard unavailable");
+
+    clipboard->setText(text);
+    return {};
+}
+
 std::expected<QUrl, QString> SnipperManager::saveCropAs(const QUrl &imageSource, const QUrl &userSelectedPath) {
     if (imageSource.isEmpty())
         return std::unexpected("Image source is missing");
@@ -118,8 +128,10 @@ std::expected<QPair<QPoint, QColor>, QString> SnipperManager::pickColorAtCursor(
 
     if (!screen) return std::unexpected("No screen found");
 
+    // localCursorPosition is used when crossing into other monitors, bcuz global pos doesn't work there
     // 1x1 pixmap located at the cursor position
-    QPixmap pixmap = screen->grabWindow(0, globalCursorPosition.x(), globalCursorPosition.y(), 1, 1);
+    QPoint localCursorPosition = globalCursorPosition - screen->geometry().topLeft();
+    QPixmap pixmap = screen->grabWindow(0, localCursorPosition.x(), localCursorPosition.y(), 1, 1);
     if (pixmap.isNull())
         return std::unexpected("Failed to grab pixel");
 
@@ -133,7 +145,6 @@ std::expected<QPair<QPoint, QColor>, QString> SnipperManager::pickColorAtCursor(
 }
 
 // == QML SIDE == //
-
 void SnipperManager::requestCaptureScreenshot(QQuickWindow *rootWindow) {
     if (!rootWindow) {
         emit errorOccurred("Can't capture: no main window found");
@@ -230,4 +241,14 @@ QVariantMap SnipperManager::requestColorAtCursor() {
     }
 
     return map;
+}
+
+bool SnipperManager::requestCopyTextToClipboard(const QString &text) {
+    auto result = copyTextToClipboard(text);
+    if (!result) {
+        emit errorOccurred(result.error());
+        return false;
+    }
+
+    return true;
 }
