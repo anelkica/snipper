@@ -70,7 +70,7 @@ std::expected<QUrl, QString> SnipperManager::saveCroppedRegion(const QUrl &image
     return QUrl::fromLocalFile(fullPath);
 }
 
-std::expected<void, QString> SnipperManager::copyToClipboard(const QUrl &imageSource) {
+std::expected<void, QString> SnipperManager::copyImageToClipboard(const QUrl &imageSource) {
     if (imageSource.isEmpty())
         return std::unexpected("Image source is missing");
 
@@ -173,13 +173,13 @@ void SnipperManager::requestCaptureScreenshot(QQuickWindow *rootWindow) {
     });
 }
 
-void SnipperManager::requestCopyToClipboard(const QUrl &imageSource) {
+void SnipperManager::requestCopyImageToClipboard(const QUrl &imageSource) {
     if (imageSource.isEmpty()) {
         emit errorOccurred("Nothing to copy");
         return;
     }
 
-    auto result = copyToClipboard(imageSource);
+    auto result = copyImageToClipboard(imageSource);
     if (result)
         emit cropCopiedToClipboard();
     else

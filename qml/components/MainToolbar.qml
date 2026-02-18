@@ -50,7 +50,7 @@ Rectangle {
             radius: 0
             hoverColor: Qt.darker(Style.accent, 1.1)
             Layout.fillWidth: true
-            onClicked: SnipperManager.requestCopyToClipboard(currentScreenshotUrl)
+            onClicked: SnipperManager.requestCopyImageToClipboard(currentScreenshotUrl)
         }
 
         AppButton {

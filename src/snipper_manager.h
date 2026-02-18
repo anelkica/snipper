@@ -25,7 +25,7 @@ public:
     std::expected<QUrl, QString> saveCroppedRegion(const QUrl &imageSource, const QRect &cropRect, qreal zoom);
     std::expected<QUrl, QString> saveCropAs(const QUrl &imageSource, const QUrl &userSelectedPath);
 
-    std::expected<void, QString> copyToClipboard(const QUrl &imageSource); // refactor name?
+    std::expected<void, QString> copyImageToClipboard(const QUrl &imageSource); // refactor name?
     std::expected<void, QString> copyTextToClipboard(const QString &text);
 
     std::expected<QPair<QPoint, QColor>, QString> pickColorAtCursor();
@@ -33,7 +33,7 @@ public:
     // FOR QML !!
     Q_INVOKABLE void requestCaptureScreenshot(QQuickWindow *rootWindow);
 
-    Q_INVOKABLE void requestCopyToClipboard(const QUrl &imageSource);
+    Q_INVOKABLE void requestCopyImageToClipboard(const QUrl &imageSource);
     Q_INVOKABLE bool requestCopyTextToClipboard(const QString &text);
 
     Q_INVOKABLE void requestSaveCroppedRegion(const QUrl &imageSource, const QRect &cropRect, qreal zoom);

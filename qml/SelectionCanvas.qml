@@ -148,8 +148,8 @@ Window {
         Image {
             source: background.source
 
-            width: background.width * root.zoomLevel
-            height: background.height * root.zoomLevel
+            width: background.width * canvasRoot.zoomLevel
+            height: background.height * canvasRoot.zoomLevel
 
             x: -((selectionBox.x + selectionBox.width / 2) * canvasRoot.zoomLevel) + (selectionBox.width / 2)
             y: -((selectionBox.y + selectionBox.height / 2) * canvasRoot.zoomLevel) + (selectionBox.height / 2)

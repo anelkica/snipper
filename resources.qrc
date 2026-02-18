@@ -11,5 +11,6 @@
         <file>icons/fullscreen-line.svg</file>
         <file>icons/more-fill.svg</file>
         <file>qml/components/MainToolbar.qml</file>
+        <file>icons/timer-line.svg</file>
     </qresource>
 </RCC>
