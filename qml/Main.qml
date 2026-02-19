@@ -15,6 +15,9 @@ ApplicationWindow {
     property url currentScreenshotUrl
     property bool isPickingColor: false
 
+    property alias countdownDelay: toolbar.selectedTimer
+    property int countdown: 0
+
     minimumWidth: 512
     minimumHeight: 256
     visible: true
@@ -22,6 +25,38 @@ ApplicationWindow {
     color: "transparent"
 
     onClosing: Qt.quit()
+
+    function startSnip() {
+        if (countdownDelay > 0) {
+            root.showMinimized()
+
+            countdown = countdownDelay
+            countdownLoader.active = true
+            countdownLoader.item.countdown = countdownDelay
+
+            countdownTimer.start()
+        } else {
+            SnipperManager.requestCaptureScreenshot(root)
+        }
+    }
+
+    Timer {
+        id: countdownTimer
+        interval: 1000
+        repeat: true
+        onTriggered: {
+            root.countdown--
+            countdownLoader.item.countdown = countdown
+
+            if (root.countdown <= 0) {
+                stop()
+
+                countdownLoader.active = false
+                SnipperManager.requestCaptureScreenshot(root)
+            }
+
+        }
+    }
 
     background: Rectangle {
         color: Style.bgPrimary
@@ -75,8 +110,6 @@ ApplicationWindow {
         target: SnipperManager
 
         function onScreenshotCaptured(screenshotUrl, currentScreen) {
-            root.currentScreenshotUrl = screenshotUrl;
-
             selectionCanvasLoader.active = true;
 
             let canvas = selectionCanvasLoader.item;
@@ -132,6 +165,12 @@ ApplicationWindow {
     }
 
     Loader {
+        id: countdownLoader
+        active: false
+        source: "components/CountdownOverlay.qml"
+    }
+
+    Loader {
         id: colorPickerLoader
         active: root.isPickingColor
         source: "components/ColorPickerDisplay.qml"
@@ -174,7 +213,11 @@ ApplicationWindow {
 
         Titlebar { id: titlebar }
 
-        MainToolbar { id: toolbar }
+        MainToolbar {
+            id: toolbar
+
+            onSnipClicked: startSnip()
+        }
 
          // -- Status Text under Toolbar -- //
         Label {

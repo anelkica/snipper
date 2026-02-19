@@ -33,6 +33,8 @@ Window {
     property rect selection: Qt.rect(0, 0, 0, 0)
     property point startPoint
 
+    property alias selectionType: selectionCanvasToolbar.selectionType
+
     property real zoomLevel: 1.0
     property bool isDragging: false
 
@@ -45,62 +47,11 @@ Window {
         }
     }
 
-    Rectangle {
-        id: selectionToolbar
+    SelectionCanvasToolbar {
+        id: selectionCanvasToolbar
 
-        anchors.top: parent.top
-        anchors.topMargin: 20
-        anchors.horizontalCenter: parent.horizontalCenter
-
-        width: toolbarRow.implicitWidth + 40
-        height: 48
-
-        visible: opacity > 0
-        opacity: canvasRoot.isDragging ? 0.0 : 1.0
-
-        Behavior on opacity {
-            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
-        }
-
-        color: Qt.alpha(Style.bgPrimary, 0.75)
-        radius: Style.radius
-        border.color: Qt.rgba(1, 1, 1, 0.15)
-        border.width: 1
-
-        z: 2
-
-        RowLayout {
-            id: toolbarRow
-            anchors.centerIn: parent
-            spacing: 12
-
-            // -- Placeholder Buttons -- //
-
-            AppButton {
-                icon.source: "qrc:/icons/crop-2-fill.svg"
-                icon.width: 18
-                icon.height: 18
-                icon.color: "white"
-
-                Layout.preferredWidth: 48
-            }
-
-            Rectangle {
-                width: 1
-                height: 20
-                color: Qt.rgba(1, 1, 1, 0.2)
-            }
-
-            AppButton {
-                text: "✕"
-
-                hoverColor: "#a82319"
-                pressedColor: "#87231b"
-
-                onClicked: canvasRoot.stopCapturing()
-                Layout.preferredWidth: 48
-            }
-        }
+        isDragging: canvasRoot.isDragging
+        onStopCapturing: canvasRoot.stopCapturing()
     }
 
     // -- LAYER 1 -> DARKENED IMAGE
@@ -165,6 +116,8 @@ Window {
         hoverEnabled: true
 
         onPressed: (mouse) => {
+            if (selectionCanvasToolbar.selectionType === "fullscreen") return;
+
             canvasRoot.isDragging = true
             canvasRoot.startPoint = Qt.point(mouse.x, mouse.y)
             canvasRoot.selection = Qt.rect(mouse.x, mouse.y, 0, 0)
@@ -189,6 +142,13 @@ Window {
         }
 
         onReleased: {
+            function save(croppedRect) {
+                SnipperManager.requestSaveCroppedRegion(canvasRoot.currentScreenshotUrl, croppedRect, canvasRoot.zoomLevel)
+                canvasRoot.isDragging = false
+                canvasRoot.zoomLevel = 1.0
+                canvasRoot.stopCapturing()
+            }
+
             function getPhysicalCropRect() {
                 const { x, y, width, height } = canvasRoot.selection;
                 const { zoomLevel, Screen } = canvasRoot;
@@ -208,13 +168,20 @@ Window {
                 );
             }
 
-            let croppedRect = getPhysicalCropRect();
 
-            SnipperManager.requestSaveCroppedRegion(canvasRoot.currentScreenshotUrl, croppedRect, canvasRoot.zoomLevel);
+            if (selectionCanvasToolbar.selectionType === "fullscreen") {
+                save(Qt.rect(0, 0, Screen.width * Screen.devicePixelRatio, Screen.height * Screen.devicePixelRatio))
+                return
+            }
 
-            canvasRoot.isDragging = false;
-            canvasRoot.zoomLevel = 1.0;
-            canvasRoot.stopCapturing();
+            const minSize = 10
+            if (canvasRoot.selection.width < minSize || canvasRoot.selection.height < minSize) {
+                canvasRoot.selection = Qt.rect(0, 0, 0, 0)
+                canvasRoot.isDragging = false
+                return
+            }
+
+            save(getPhysicalCropRect())
         }
     }
 }

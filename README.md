@@ -21,6 +21,7 @@ Open the `snipper` folder in Qt Creator IDE to build and run the application.
 ## ✨ Features
 - Region capture
   - Selection rectangle
+  - Fullscreen
   - *PLANNED*: Window capture
 - Magnification
   - Scroll up/down while snipping
@@ -30,18 +31,16 @@ Open the `snipper` folder in Qt Creator IDE to build and run the application.
   - Opacity via scrolling
   - Click-through functionality
 - Saving snips
+- Timer feature
 
 ## 💫 Planned features..
 - EasyOCR
-- *UNCERTAIN*: GIF recording
 
 ## 📸 Screenshots
-### snipper UI (OUTDATED)
+### snipper UI
+the UI is subject to frequent changes, as such, these visuals may not always reflect the current state
 <div align="center">
-    <img width="512" height="256" src="https://github.com/user-attachments/assets/3c00f33f-dfb3-4fa4-aa73-e6c2697bb7da">
-</div>
-<div align="center">
-    <img width="512" height="256" src="https://github.com/user-attachments/assets/a82425cc-3472-4e38-9785-c3b5d07b250e">
+    <img width="512" height="256" src="https://github.com/user-attachments/assets/3694b1e6-d0ac-44fa-abc6-0b4fbf4dcfc4">
 </div>
 
 ### Snipping and magnification
@@ -56,10 +55,15 @@ Open the `snipper` folder in Qt Creator IDE to build and run the application.
     <p><i>copies to clipboard</i></p>
 </div>
 
+### Timer
+<div align="center">
+    <img width="330" height="330" src="https://github.com/user-attachments/assets/e7176754-85f1-4cc8-beb5-9df70742d85f">
+</div>
+
 ### Creating pinnable images
 <div align="center">
-    <img width="542" height="305" src="https://github.com/user-attachments/assets/abd88c68-5210-4770-bb3d-0f0cee70fd1a">
-    <p><i>right click to remove</i></p>
+    <img width="428" height="369" src="https://github.com/user-attachments/assets/bb21fe3d-3f27-47e2-b9ee-9a0b573965d8">
+    <p><i>right click to open a menu!</i></p>
 </div>
 
 ### Opacity and click-through magic for pinnables

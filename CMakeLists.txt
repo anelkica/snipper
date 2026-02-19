@@ -36,6 +36,8 @@ qt_add_qml_module(appsnipper
     RESOURCES
         resources.qrc
         QML_FILES qml/components/ColorPickerDisplay.qml
+        QML_FILES qml/components/SelectionCanvasToolbar.qml
+        QML_FILES qml/components/CountdownOverlay.qml
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
