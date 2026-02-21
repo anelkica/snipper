@@ -11,6 +11,7 @@ Item {
     property bool isDragging: false
 
     signal stopCapturing()
+    signal capturingDeclined()
 
     anchors.top: parent.top
     anchors.topMargin: 20
@@ -39,7 +40,7 @@ Item {
             spacing: 12
 
             AppButton {
-                icon.source: "qrc:/icons/crop-2-fill.svg"
+                icon.source: "qrc:/icons/crop-line.svg"
                 icon.width: 18
                 icon.height: 18
                 icon.color: selectionToolbar.selectionType !== "rectangle" ? Style.accent : "white"
@@ -52,8 +53,8 @@ Item {
             AppButton {
                 text: "✕"
                 hoverColor: "#a82319"
-                onClicked: stopCapturing()
                 Layout.preferredWidth: 48
+                onClicked: capturingDeclined()
             }
         }
     }

@@ -10,7 +10,10 @@
         <file>icons/crop-2-fill.svg</file>
         <file>icons/fullscreen-line.svg</file>
         <file>icons/more-fill.svg</file>
-        <file>qml/components/MainToolbar.qml</file>
+        <file>qml/components/MainPageToolbar.qml</file>
         <file>icons/timer-line.svg</file>
+        <file>icons/palette-line.svg</file>
+        <file>icons/arrow-left-s-line.svg</file>
+        <file>icons/crop-line.svg</file>
     </qresource>
 </RCC>

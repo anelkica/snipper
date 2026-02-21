@@ -30,17 +30,21 @@ Open the `snipper` folder in Qt Creator IDE to build and run the application.
   - Create floating stay-on-top snips
   - Opacity via scrolling
   - Click-through functionality
+- Color picker
+  - Picked colors can be viewed in palette page
+  - Picked colors can be copied as JSON array
 - Saving snips
 - Timer feature
 
 ## 💫 Planned features..
-- EasyOCR
+- *UNCERTAIN*: EasyOCR
+- Annotation
 
 ## 📸 Screenshots
 ### snipper UI
-the UI is subject to frequent changes, as such, these visuals may not always reflect the current state
+- The UI is subject to frequent changes, as such, these visuals may not always reflect the current state!
 <div align="center">
-    <img width="512" height="256" src="https://github.com/user-attachments/assets/3694b1e6-d0ac-44fa-abc6-0b4fbf4dcfc4">
+    <img width="512" height="256" src="https://github.com/user-attachments/assets/04b8bd04-1c3d-43f0-9edf-59a25798bca0">
 </div>
 
 ### Snipping and magnification
@@ -55,9 +59,9 @@ the UI is subject to frequent changes, as such, these visuals may not always ref
     <p><i>copies to clipboard</i></p>
 </div>
 
-### Timer
+### Color picker history
 <div align="center">
-    <img width="330" height="330" src="https://github.com/user-attachments/assets/e7176754-85f1-4cc8-beb5-9df70742d85f">
+    <img width="336" height="301" src="https://github.com/user-attachments/assets/8df14576-74c8-4c38-aa39-83f4e28ead4f">
 </div>
 
 ### Creating pinnable images

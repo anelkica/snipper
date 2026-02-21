@@ -12,10 +12,6 @@ import snipper // SnipperManager, WindowManager
 ApplicationWindow {
     id: root
 
-    property url currentScreenshotUrl
-    property bool isPickingColor: false
-
-    property alias countdownDelay: toolbar.selectedTimer
     property int countdown: 0
 
     minimumWidth: 512
@@ -26,13 +22,18 @@ ApplicationWindow {
 
     onClosing: Qt.quit()
 
-    function startSnip() {
-        if (countdownDelay > 0) {
+    function notify(msg, isError = false) {
+        toast.show(msg, isError)
+        titlebar.statusColor = isError ? Style.failure : Style.success
+    }
+
+    function snipClicked() {
+        if (AppState.timerDelay > 0) {
             root.showMinimized()
 
-            countdown = countdownDelay
+            countdown = AppState.timerDelay
             countdownLoader.active = true
-            countdownLoader.item.countdown = countdownDelay
+            countdownLoader.item.countdown = AppState.timerDelay
 
             countdownTimer.start()
         } else {
@@ -40,6 +41,7 @@ ApplicationWindow {
         }
     }
 
+    // if timer mode is enabled, starts a visible countdown timer on the screen
     Timer {
         id: countdownTimer
         interval: 1000
@@ -62,12 +64,9 @@ ApplicationWindow {
         color: Style.bgPrimary
         radius: Style.radius
         border.width: 1
-        border.color: Qt.rgba(1, 1, 1, 0.15)
-
-        // gradient: Gradient {
-        //      GradientStop { position: 0.0; color: Qt.lighter(Style.bgPrimary, 1.1) }
-        //      GradientStop { position: 1.0; color: Qt.darker(Style.bgPrimary, 1.15) }
-        // }
+        border.color: Style.windowBorder
+        anchors.fill: parent
+        anchors.margins: 2
     }
 
     Shortcut {
@@ -75,12 +74,12 @@ ApplicationWindow {
         context: Qt.ApplicationShortcut
 
         onActivated: {
-            isPickingColor = !isPickingColor
+            AppState.isPickingColor = !AppState.isPickingColor
         }
     }
 
     Shortcut {
-        sequence: "CTRL+T"
+        sequence: "CTRL+R"
         context: Qt.ApplicationShortcut
 
         onActivated: WindowManager.requestRaiseAllPins();
@@ -88,7 +87,7 @@ ApplicationWindow {
 
     // moves the color picker window smoothly, matching the Hz of the monitor
     FrameAnimation {
-        running: isPickingColor
+        running: AppState.isPickingColor
 
         onTriggered: {
             let colorPicker = colorPickerLoader.item;
@@ -110,43 +109,40 @@ ApplicationWindow {
         target: SnipperManager
 
         function onScreenshotCaptured(screenshotUrl, currentScreen) {
-            selectionCanvasLoader.active = true;
+            if (selectionCanvasLoader.active) return;
 
-            let canvas = selectionCanvasLoader.item;
+            AppState.currentScreenshotUrl = "";
+            selectionCanvasLoader.active = true
+            let canvas = selectionCanvasLoader.item
             if (canvas) {
-                canvas.screen = currentScreen;
-                canvas.currentScreenshotUrl = screenshotUrl;
+                canvas.screen = currentScreen
+                AppState.currentScreenshotUrl = screenshotUrl
             }
         }
 
         function onCropCopiedToClipboard() {
-            feedbackLabel.pulse("Copied to clipboard", false);
-            titlebar.statusColor = Style.success;
+            notify("Copied to clipboard")
         }
 
         function onCropSaved(croppedImageUrl) {
-            feedbackLabel.pulse("Cached crop", false);
-            titlebar.statusColor = Style.success;
-            currentScreenshotUrl = croppedImageUrl;
-            preview.source = croppedImageUrl;
+            notify("Snip cached")
+            AppState.currentScreenshotUrl = croppedImageUrl
         }
 
         function onErrorOccurred(message) {
-            feedbackLabel.pulse(message, true);
-            titlebar.statusColor = Style.failure;
+            notify(message, true)
         }
     }
 
     Connections {
         target: WindowManager
+
         function onErrorOccurred(message) {
-            feedbackLabel.pulse(message, true);
-            titlebar.statusColor = Style.failure;
+            notify(message, true)
         }
 
         function onRaisedAllPins(amountOfPins) {
-            feedbackLabel.pulse(`Pins raised: ${amountOfPins}`, false);
-            titlebar.statusColor = Style.success;
+            notify(`Reset pins: ${amountOfPins}`)
         }
     }
 
@@ -158,9 +154,8 @@ ApplicationWindow {
         defaultSuffix: "png"
 
         onAccepted: {
-            SnipperManager.requestSaveCropAs(root.currentScreenshotUrl, saveCropDialog.selectedFile)
-            feedbackLabel.pulse("Saved!", false);
-            titlebar.statusColor = Style.success;
+            SnipperManager.requestSaveCropAs(AppState.currentScreenshotUrl, saveCropDialog.selectedFile)
+            notify("Saved snip")
         }
     }
 
@@ -172,7 +167,7 @@ ApplicationWindow {
 
     Loader {
         id: colorPickerLoader
-        active: root.isPickingColor
+        active: AppState.isPickingColor
         source: "components/ColorPickerDisplay.qml"
 
         Connections {
@@ -180,13 +175,13 @@ ApplicationWindow {
             ignoreUnknownSignals: true
 
             function onColorAccepted(hex) {
-                root.isPickingColor = false
+                AppState.isPickingColor = false
 
-                let success = SnipperManager.requestCopyTextToClipboard(hex)
-                if (!success) return;
+                //let success = SnipperManager.requestCopyTextToClipboard(hex)
+                //if (!success) return;
 
-                feedbackLabel.pulse(`Copied ${hex} to clipboard`, false);
-                titlebar.statusColor = Style.success;
+                ColorHistory.add(hex)
+                notify(`Added ${hex} to color palette`)
             }
         }
     }
@@ -199,64 +194,57 @@ ApplicationWindow {
         Connections {
             target: selectionCanvasLoader.item
             ignoreUnknownSignals: true
+
             function onStopCapturing() {
-                selectionCanvasLoader.active = false;
-                root.showNormal();
+                selectionCanvasLoader.active = false
+                root.showNormal()
             }
         }
     }
 
+    Toast { id: toast }
 
     ColumnLayout {
         anchors.fill: parent
+        anchors.margins: 2
         spacing: 0
 
         Titlebar { id: titlebar }
 
-        MainToolbar {
-            id: toolbar
-
-            onSnipClicked: startSnip()
-        }
-
-         // -- Status Text under Toolbar -- //
-        Label {
-            id: feedbackLabel
-            Layout.alignment: Qt.AlignHCenter
-            Layout.topMargin: 8
-            text: "Saved.."
-            font.italic: true; font.letterSpacing: 1
-            color: "#3CB371"
-            opacity: 0
-
-            function pulse(message, isError) {
-                feedbackLabel.text = message;
-                feedbackLabel.color = isError ? Qt.lighter(Style.failure, 1.2) : Qt.lighter(Style.success, 1.2);
-                feedbackAnimation.restart();
-            }
-
-            SequentialAnimation on opacity {
-                id: feedbackAnimation
-                running: false
-                NumberAnimation { to: 1; duration: 200; easing.type: Easing.OutCubic }
-                PauseAnimation { duration: 2000 }
-                NumberAnimation { to: 0; duration: 800; easing.type: Easing.InCubic }
-            }
-        }
-
-         // -- Preview Image after Snipping -- //
-        Item {
+        StackView {
+            id: stackView
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.margins: 20
+            initialItem: "pages/MainPage.qml"
 
-            Image {
-                id: preview
-                anchors.fill: parent
-                fillMode: Image.PreserveAspectFit
-                source: root.currentScreenshotUrl
-                smooth: true; mipmap: true; antialiasing: true
+            onCurrentItemChanged: {
+                if (!currentItem) return;
+
+                // map of signal name to root handler
+                const connections = {
+                    "snipClicked":      root.snipClicked,
+                    "toastRequested":   (msg, isError) => notify(msg, isError)
+                }
+
+                for (const [signal, handler] of Object.entries(connections)) {
+                    if (currentItem[signal])
+                        currentItem[signal].connect(handler)
+                }
             }
+        }
+    }
+
+    AppButton {
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        anchors.margins: 12
+        icon.source: stackView.depth > 1 ? "qrc:/icons/arrow-left-s-line.svg" : "qrc:/icons/palette-line.svg"
+        icon.width: 18; icon.height: 18; icon.color: "white"
+        onClicked: {
+            if (stackView.depth > 1)
+                stackView.pop()
+            else
+                stackView.push("pages/PalettePage.qml")
         }
     }
 

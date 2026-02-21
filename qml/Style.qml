@@ -6,6 +6,8 @@ QtObject {
     readonly property color bgSecondary:   "#242424"
     readonly property color bgTertiary:    "#2f2f2f"
 
+    readonly property color bgToast:       "#1e2530"
+
     readonly property color bgHover:       "#2d333d"
     readonly property color bgPressed:     "#252a32"
 

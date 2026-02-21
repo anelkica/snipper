@@ -13,7 +13,7 @@ Rectangle {
     radius: Style.radius
     border.color: Qt.rgba(1, 1, 1, 0.1)
 
-    property int selectedTimer: 0
+    property bool isPickingColor: false
 
     signal snipClicked()
 
@@ -54,9 +54,9 @@ Rectangle {
                 AppButton {
                     text: modelData + "s"
                     Layout.preferredWidth: 48
-                    palette.windowText: toolbarRoot.selectedTimer === modelData ? Style.accent : "white"
+                    palette.windowText: AppState.timerDelay === modelData ? Style.accent : "white"
                     onClicked: {
-                        toolbarRoot.selectedTimer = toolbarRoot.selectedTimer === modelData ? 0 : modelData
+                        AppState.timerDelay = AppState.timerDelay === modelData ? 0 : modelData
                         timerPopup.close()
                     }
                 }
@@ -83,7 +83,7 @@ Rectangle {
             id: timerButton
             icon.source: "qrc:/icons/timer-line.svg"
             icon.width: 18; icon.height: 18
-            icon.color: toolbarRoot.selectedTimer > 0 ? Style.accent : "white"
+            icon.color: AppState.timerDelay > 0 ? Style.accent : "white"
             hoverColor: Qt.darker(Style.accent, 1.1)
             radius: 0
             Layout.fillWidth: true
@@ -97,7 +97,7 @@ Rectangle {
                 height: 3
                 radius: 2
                 color: Style.accent
-                visible: toolbarRoot.selectedTimer > 0
+                visible: AppState.timerDelay > 0
             }
         }
 
@@ -112,7 +112,7 @@ Rectangle {
             icon.width: 18; icon.height: 18; icon.color: "white"
             radius: 0; hoverColor: Qt.darker(Style.accent, 1.1)
             Layout.fillWidth: true
-            onClicked: SnipperManager.requestCopyImageToClipboard(currentScreenshotUrl)
+            onClicked: SnipperManager.requestCopyImageToClipboard(AppState.currentScreenshotUrl)
         }
 
         AppButton {
@@ -120,7 +120,7 @@ Rectangle {
             icon.width: 18; icon.height: 18; icon.color: "white"
             radius: 0; hoverColor: Qt.darker(Style.accent, 1.1)
             Layout.fillWidth: true
-            onClicked: WindowManager.requestCreatePinWindow(currentScreenshotUrl)
+            onClicked: WindowManager.requestCreatePinWindow(AppState.currentScreenshotUrl)
         }
 
         AppButton {
@@ -128,7 +128,7 @@ Rectangle {
             icon.width: 18; icon.height: 18; icon.color: "white"
             radius: 0; hoverColor: Qt.darker(Style.accent, 1.1)
             Layout.fillWidth: true
-            onClicked: root.isPickingColor = !root.isPickingColor
+            onClicked: AppState.isPickingColor = !AppState.isPickingColor
 
             // activity line
             Rectangle {
@@ -137,7 +137,7 @@ Rectangle {
                 width: parent.width * 0.6
                 height: 3; radius: 2
                 color: Style.accent
-                visible: root.isPickingColor
+                visible: AppState.isPickingColor
             }
         }
 
@@ -152,7 +152,7 @@ Rectangle {
             icon.width: 18; icon.height: 18; icon.color: "white"
             radius: 0; hoverColor: Qt.darker(Style.accent, 1.1)
             Layout.fillWidth: true
-            onClicked: if (root.currentScreenshotUrl !== "") saveCropDialog.open()
+            onClicked: if (AppState.currentScreenshotUrl !== "") saveCropDialog.open()
         }
 
         AppButton {

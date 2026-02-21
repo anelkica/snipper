@@ -29,7 +29,6 @@ Window {
     visibility: Window.FullScreen
     color: "transparent"
 
-    property string currentScreenshotUrl: ""
     property rect selection: Qt.rect(0, 0, 0, 0)
     property point startPoint
 
@@ -40,18 +39,21 @@ Window {
 
     signal stopCapturing()
 
+    function declineCapturing() {
+        AppState.currentScreenshotUrl = ""
+        canvasRoot.stopCapturing()
+    }
+
     Shortcut {
         sequence: "Esc"
-        onActivated: {
-            canvasRoot.stopCapturing()
-        }
+        onActivated: declineCapturing()
     }
 
     SelectionCanvasToolbar {
         id: selectionCanvasToolbar
 
         isDragging: canvasRoot.isDragging
-        onStopCapturing: canvasRoot.stopCapturing()
+        onCapturingDeclined: declineCapturing()
     }
 
     // -- LAYER 1 -> DARKENED IMAGE
@@ -59,7 +61,7 @@ Window {
         id: background
 
         anchors.fill: parent
-        source: canvasRoot.currentScreenshotUrl
+        source: AppState.currentScreenshotUrl
         sourceSize.width: Screen.width * Screen.devicePixelRatio // without dpr, the screenshot is blurry
         sourceSize.height: Screen.height * Screen.devicePixelRatio
         cache: false
@@ -112,7 +114,7 @@ Window {
     // DRAGGING / ZOOMING
     MouseArea {
         anchors.fill: parent
-        cursorShape: Qt.CrossCursor
+        cursorShape: selectionCanvasToolbar.selectionType === "fullscreen" ? Qt.ArrowCursor : Qt.CrossCursor
         hoverEnabled: true
 
         onPressed: (mouse) => {
@@ -124,6 +126,8 @@ Window {
         }
 
         onWheel: (wheel) => {
+            if (selectionCanvasToolbar.selectionType === "fullscreen") return;
+
             if (wheel.angleDelta.y > 0)
                 canvasRoot.zoomLevel = Math.min(canvasRoot.zoomLevel + 0.25, 5.0)
             else
@@ -131,6 +135,7 @@ Window {
         }
 
         onPositionChanged: (mouse) => {
+            if (selectionCanvasToolbar.selectionType === "fullscreen") return;
             if (!pressed) return;
 
             canvasRoot.selection = Qt.rect(
@@ -143,7 +148,7 @@ Window {
 
         onReleased: {
             function save(croppedRect) {
-                SnipperManager.requestSaveCroppedRegion(canvasRoot.currentScreenshotUrl, croppedRect, canvasRoot.zoomLevel)
+                SnipperManager.requestSaveCroppedRegion(AppState.currentScreenshotUrl, croppedRect, canvasRoot.zoomLevel)
                 canvasRoot.isDragging = false
                 canvasRoot.zoomLevel = 1.0
                 canvasRoot.stopCapturing()
