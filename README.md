@@ -44,7 +44,7 @@ Open the `snipper` folder in Qt Creator IDE to build and run the application.
 ### snipper UI
 - The UI is subject to frequent changes, as such, these visuals may not always reflect the current state!
 <div align="center">
-    <img width="512" height="256" src="https://github.com/user-attachments/assets/04b8bd04-1c3d-43f0-9edf-59a25798bca0">
+    <img width="390" height="261" src="https://github.com/user-attachments/assets/04b8bd04-1c3d-43f0-9edf-59a25798bca0">
 </div>
 
 ### Snipping and magnification
