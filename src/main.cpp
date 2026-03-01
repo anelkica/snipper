@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
 
-    QQuickStyle::setStyle("Basic");
+    QQuickStyle::setStyle("Material");
 
     QQmlApplicationEngine engine;
     QObject::connect(

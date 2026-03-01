@@ -1,7 +1,7 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
-import QtQuick.Controls
 import snipper
 
 /*
@@ -27,6 +27,7 @@ Window {
 
     flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
     visibility: Window.FullScreen
+    Material.theme: Material.Dark
     color: "transparent"
 
     property rect selection: Qt.rect(0, 0, 0, 0)

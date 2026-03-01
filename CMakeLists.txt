@@ -15,34 +15,39 @@ qt_add_resources(RESOURCES resources.qrc)
 qt_add_executable(appsnipper src/main.cpp ${RESOURCES})
 
 set_source_files_properties(qml/Style.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/Icons.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
 qt_add_qml_module(appsnipper
     URI snipper
     QML_FILES
         qml/Main.qml
-        qml/SelectionCanvas.qml
         qml/FloatingImageWindow.qml
         qml/Style.qml
-
+        qml/Icons.qml
+        # Components
         qml/components/AppButton.qml
-        qml/components/Titlebar.qml
         qml/components/WindowResizeHandlers.qml
         qml/components/MainPageToolbar.qml
+        qml/components/SelectionCanvasToolbar.qml
+        qml/components/Toast.qml
+        # Sub-folders
+        qml/components/layouts/Titlebar.qml
+        qml/components/overlays/SnippingOverlay.qml
+        qml/components/overlays/CountdownOverlay.qml
+        qml/components/overlays/ColorPickerOverlay.qml
+        qml/components/ui/WindowToolButton.qml
+        qml/components/ui/DropdownMenu.qml
+        qml/components/ui/DropdownMenuItem.qml
+        # Pages
+        qml/pages/PalettePage.qml
+        qml/pages/MainPage.qml
     SOURCES
-        src/snipper_manager.h
-        src/snipper_manager.cpp
-        src/window_manager.h
-        src/window_manager.cpp
+        src/snipper_manager.h src/snipper_manager.cpp
+        src/window_manager.h src/window_manager.cpp
+        src/colorhistory.h src/colorhistory.cpp
+        src/app_state.hpp src/app_settings.hpp
     RESOURCES
         resources.qrc
-        QML_FILES qml/components/ColorPickerDisplay.qml
-        QML_FILES qml/components/SelectionCanvasToolbar.qml
-        QML_FILES qml/components/CountdownOverlay.qml
-        QML_FILES qml/pages/PalettePage.qml
-        QML_FILES qml/pages/MainPage.qml
-        QML_FILES qml/components/Toast.qml
-        SOURCES src/colorhistory.h src/colorhistory.cpp
-        SOURCES src/appstate.h
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

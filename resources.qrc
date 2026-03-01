@@ -15,5 +15,6 @@
         <file>icons/palette-line.svg</file>
         <file>icons/arrow-left-s-line.svg</file>
         <file>icons/crop-line.svg</file>
+        <file>icons/lucide/lucide.ttf</file>
     </qresource>
 </RCC>

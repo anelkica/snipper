@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Window
 import QtQuick.Layouts
 import snipper
@@ -38,7 +39,6 @@ Window {
 
     signal colorAccepted(string hex)
 
-
     TapHandler {
         onTapped: {
             contentDisplay.scale = 0.95
@@ -69,8 +69,8 @@ Window {
         y: isAtBottom ? (parent.height / 2) - height - yOffset
                       : (parent.height / 2) + yOffset
 
-        color: Qt.darker(Style.bgPrimary, 1.2)
-        radius: Style.radius
+        color: Material.color(Material.Grey, Material.Shade900)
+        radius: 4
         border.width: 1
         border.color: Style.windowBorder
 
@@ -88,7 +88,7 @@ Window {
                 Layout.preferredWidth: 24
                 Layout.preferredHeight: 24
                 Layout.alignment: Qt.AlignVCenter
-                radius: Style.radius / 2
+                radius: 2
                 border.width: 1
                 border.color: Style.windowBorder
             }

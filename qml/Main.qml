@@ -1,12 +1,7 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Window
 import QtQuick.Layouts
-import QtQuick.Effects
-import QtQuick.Dialogs
-import QtCore
 
-import "components"
 import snipper // SnipperManager, WindowManager
 
 ApplicationWindow {
@@ -18,71 +13,50 @@ ApplicationWindow {
     minimumHeight: 256
     visible: true
     flags: Qt.Window | Qt.FramelessWindowHint
+
     color: "transparent"
+    Material.theme: Material.Dark
 
-    onClosing: Qt.quit()
-
-    function notify(msg, isError = false) {
-        toast.show(msg, isError)
-        titlebar.statusColor = isError ? Style.failure : Style.success
+    FontLoader {
+        source: "qrc:/icons/lucide/lucide.ttf"
     }
 
-    function snipClicked() {
-        if (AppState.timerDelay > 0) {
-            root.showMinimized()
+    Connections {
+        target: AppState
+        function onIsSnippingChanged() {
+            if (!AppState.isSnipping) return
 
-            countdown = AppState.timerDelay
-            countdownLoader.active = true
-            countdownLoader.item.countdown = AppState.timerDelay
+            if (AppSettings.timerDelay > 0) {
+                root.showMinimized()
 
-            countdownTimer.start()
-        } else {
-            SnipperManager.requestCaptureScreenshot(root)
-        }
-    }
+                root.countdown = AppSettings.timerDelay
+                countdownLoader.active = true
+                countdownLoader.item.countdown = AppSettings.timerDelay
 
-    // if timer mode is enabled, starts a visible countdown timer on the screen
-    Timer {
-        id: countdownTimer
-        interval: 1000
-        repeat: true
-        onTriggered: {
-            root.countdown--
-            countdownLoader.item.countdown = countdown
-
-            if (root.countdown <= 0) {
-                stop()
-
-                countdownLoader.active = false
+                countdownTimer.start()
+            } else {
                 SnipperManager.requestCaptureScreenshot(root)
             }
-
         }
     }
 
-    background: Rectangle {
-        color: Style.bgPrimary
-        radius: Style.radius
-        border.width: 1
-        border.color: Style.windowBorder
-        anchors.fill: parent
-        anchors.margins: 2
-    }
+    Connections {
+        target: SnipperManager
+        function onScreenshotCaptured(screenshotUrl, currentScreen) {
+            if (snippingOverlayLoader.active) return;
 
-    Shortcut {
-        sequence: "Escape"
-        context: Qt.ApplicationShortcut
-
-        onActivated: {
-            AppState.isPickingColor = !AppState.isPickingColor
+            AppState.currentScreenshotUrl = "";
+            snippingOverlayLoader.active = true
+            let overlay = snippingOverlayLoader.item
+            if (overlay) {
+                overlay.screen = currentScreen
+                AppState.currentScreenshotUrl = screenshotUrl
+            }
         }
-    }
 
-    Shortcut {
-        sequence: "CTRL+R"
-        context: Qt.ApplicationShortcut
-
-        onActivated: WindowManager.requestRaiseAllPins();
+        function onCropSaved(croppedImageUrl) {
+            AppState.currentScreenshotUrl = croppedImageUrl
+        }
     }
 
     // moves the color picker window smoothly, matching the Hz of the monitor
@@ -105,70 +79,34 @@ ApplicationWindow {
         }
     }
 
-    Connections {
-        target: SnipperManager
+    // if timer mode is enabled, starts a visible countdown timer on the screen
+    Timer {
+        id: countdownTimer
+        interval: 1000
+        repeat: true
+        onTriggered: {
+            root.countdown--
+            countdownLoader.item.countdown = countdown
 
-        function onScreenshotCaptured(screenshotUrl, currentScreen) {
-            if (selectionCanvasLoader.active) return;
+            if (root.countdown <= 0) {
+                stop()
 
-            AppState.currentScreenshotUrl = "";
-            selectionCanvasLoader.active = true
-            let canvas = selectionCanvasLoader.item
-            if (canvas) {
-                canvas.screen = currentScreen
-                AppState.currentScreenshotUrl = screenshotUrl
+                countdownLoader.active = false
+                SnipperManager.requestCaptureScreenshot(root)
             }
-        }
-
-        function onCropCopiedToClipboard() {
-            notify("Copied to clipboard")
-        }
-
-        function onCropSaved(croppedImageUrl) {
-            notify("Snip cached")
-            AppState.currentScreenshotUrl = croppedImageUrl
-        }
-
-        function onErrorOccurred(message) {
-            notify(message, true)
-        }
-    }
-
-    Connections {
-        target: WindowManager
-
-        function onErrorOccurred(message) {
-            notify(message, true)
-        }
-
-        function onRaisedAllPins(amountOfPins) {
-            notify(`Reset pins: ${amountOfPins}`)
-        }
-    }
-
-    FileDialog {
-        id: saveCropDialog
-        title: "Save Snip As"
-        fileMode: FileDialog.SaveFile
-        nameFilters: ["Image files (*.png *.jpg)", "All files (*)"]
-        defaultSuffix: "png"
-
-        onAccepted: {
-            SnipperManager.requestSaveCropAs(AppState.currentScreenshotUrl, saveCropDialog.selectedFile)
-            notify("Saved snip")
         }
     }
 
     Loader {
         id: countdownLoader
         active: false
-        source: "components/CountdownOverlay.qml"
+        source: "components/overlays/CountdownOverlay.qml"
     }
 
     Loader {
         id: colorPickerLoader
         active: AppState.isPickingColor
-        source: "components/ColorPickerDisplay.qml"
+        source: "components/overlays/ColorPickerOverlay.qml"
 
         Connections {
             target: colorPickerLoader.item
@@ -181,72 +119,153 @@ ApplicationWindow {
                 //if (!success) return;
 
                 ColorHistory.add(hex)
-                notify(`Added ${hex} to color palette`)
+                //notify(`Added ${hex} to color palette`)
             }
         }
     }
 
     Loader {
-        id: selectionCanvasLoader
+        id: snippingOverlayLoader
         active: false
-        source: "SelectionCanvas.qml"
+        source: "components/overlays/SnippingOverlay.qml"
 
         Connections {
-            target: selectionCanvasLoader.item
+            target: snippingOverlayLoader.item
             ignoreUnknownSignals: true
 
             function onStopCapturing() {
-                selectionCanvasLoader.active = false
+                AppState.isSnipping = false
+                snippingOverlayLoader.active = false
                 root.showNormal()
             }
         }
     }
 
-    Toast { id: toast }
+    background: Rectangle {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        color: Material.backgroundColor
+
+        border.color: Qt.rgba(1, 1, 1, 0.04)
+        border.width: 1
+    }
+
+    // WINDOW CONTENT //
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 2
+        anchors.margins: 1
         spacing: 0
 
-        Titlebar { id: titlebar }
+        Titlebar {
+            id: titlebar
+            Layout.fillWidth: true
+        }
 
-        StackView {
-            id: stackView
+        Rectangle {
+            Layout.fillWidth: true
+            height: 8
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.1) }
+                GradientStop { position: 1.0; color: "transparent" }
+            }
+        }
+
+        Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            initialItem: "pages/MainPage.qml"
+            color: Material.backgroundColor
 
-            onCurrentItemChanged: {
-                if (!currentItem) return;
+            Image {
+                id: previewImage
+                anchors.centerIn: parent
+                source: AppState.currentScreenshotUrl
+                fillMode: Image.PreserveAspectFit
+                width: parent.width - 32
+                height: parent.height - 32
+                visible: AppState.currentScreenshotUrl !== ""
 
-                // map of signal name to root handler
-                const connections = {
-                    "snipClicked":      root.snipClicked,
-                    "toastRequested":   (msg, isError) => notify(msg, isError)
+                // hover handler wrapper to make sure hover only procs on image hover
+                Item {
+                    anchors.centerIn: parent
+                    width: previewImage.paintedWidth
+                    height: previewImage.paintedHeight
+
+                    HoverHandler {
+                        id: imageHover
+                    }
+                }
+            }
+
+            // floating action bar for image
+            Rectangle {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.bottom: previewImage.bottom
+                anchors.bottomMargin: 16
+
+                visible: AppState.currentScreenshotUrl !== ""
+                opacity: imageHover.hovered || barHover.hovered ? 1.0 : 0.0
+
+                width: actionRow.implicitWidth + 16
+                height: 36
+                radius: 4
+                color: Material.color(Material.Grey, Material.Shade900)
+                border.color: Qt.rgba(1, 1, 1, 0.12)
+                border.width: 1
+
+                HoverHandler {
+                    id: barHover
                 }
 
-                for (const [signal, handler] of Object.entries(connections)) {
-                    if (currentItem[signal])
-                        currentItem[signal].connect(handler)
+                Behavior on opacity {
+                    NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                }
+
+                RowLayout {
+                    id: actionRow
+                    anchors.centerIn: parent
+                    spacing: 2
+
+                    WindowToolButton {
+                        text: Icons.copy
+                        btnRadius: 4
+                        Layout.preferredWidth: 32
+                        Layout.preferredHeight: 28
+                        // onClicked:
+                    }
+
+                    Rectangle {
+                        width: 1; height: 16
+                        color: Qt.rgba(1, 1, 1, 0.12)
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    WindowToolButton {
+                        text: Icons.pin
+                        btnRadius: 4
+                        Layout.preferredWidth: 32
+                        Layout.preferredHeight: 28
+                        // onClicked:
+                    }
+
+                    WindowToolButton {
+                        text: Icons.save
+                        btnRadius: 4
+                        Layout.preferredWidth: 32
+                        Layout.preferredHeight: 28
+                        // onClicked:
+                    }
                 }
             }
         }
     }
 
-    AppButton {
-        anchors.left: parent.left
-        anchors.bottom: parent.bottom
-        anchors.margins: 12
-        icon.source: stackView.depth > 1 ? "qrc:/icons/arrow-left-s-line.svg" : "qrc:/icons/palette-line.svg"
-        icon.width: 18; icon.height: 18; icon.color: "white"
-        onClicked: {
-            if (stackView.depth > 1)
-                stackView.pop()
-            else
-                stackView.push("pages/PalettePage.qml")
-        }
+    DragHandler {
+        target: null
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+        onActiveChanged: if (active) root.startSystemMove()
     }
 
-    WindowResizeHandlers { z: 2 }
+
+    WindowResizeHandlers {}
 }
