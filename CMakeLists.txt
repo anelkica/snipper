@@ -5,13 +5,20 @@ project(snipper VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# TODO: Linux support
+set(PLATFORM_RESOURCES "")
+
+if(WIN32)
+    set(PLATFORM_RESOURCES "${CMAKE_CURRENT_SOURCE_DIR}/windows_app_icon.rc")
+endif()
+
 find_package(Qt6 REQUIRED COMPONENTS Quick)
 find_package(Qt6 REQUIRED COMPONENTS QuickControls2)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
 qt_add_resources(RESOURCES resources.qrc)
-qt_add_executable(appsnipper src/main.cpp ${RESOURCES})
+qt_add_executable(appsnipper src/main.cpp ${RESOURCES} ${PLATFORM_RESOURCES})
 
 set_source_files_properties(qml/Style.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/Icons.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
@@ -49,6 +56,8 @@ qt_add_qml_module(appsnipper
         src/state/app_state.hpp src/state/app_settings.hpp
     RESOURCES
         resources.qrc
+        QML_FILES qml/components/ui/BaseButton.qml
+        RESOURCES windows_app_icon.rc
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

@@ -35,19 +35,23 @@ ToolBar {
                 WindowToolButton {
                     text: Icons.minimize
                     font.pixelSize: 16
-                    onClicked: Window.window.showMinimized()
+                    onClicked: {
+                        Window.window.visibility = Window.Minimized
+                    }
                 }
 
+                // TODO: fix whatever bullshittery is going on here
+                // showMinimized() prevents using showNormal() to restore window.. peak
                 WindowToolButton {
                     text: Window.window.visibility === Window.Maximized ? Icons.restore : Icons.maximize
                     font.pixelSize: 14
 
-                    onClicked: {
-                        if (Window.window.visibility === Window.Maximized)
-                            root.showNormal()
-                        else
-                            Window.window.showMaximized()
-                    }
+                        onClicked: {
+                            if (Window.window.visibility === Window.Maximized)
+                                Window.window.showNormal()
+                            else
+                                Window.window.showMaximized()
+                        }
                 }
 
                 WindowToolButton {
@@ -158,7 +162,34 @@ ToolBar {
 
             WindowToolButton {
                 text: Icons.palette
-                onClicked: Navigator.push("pages/PalettePage.qml")
+                iconColor: AppState.hasUnseenColors ? Material.accent : Material.foreground
+                onClicked: {
+                    Navigator.push("pages/PalettePage.qml")
+                    AppState.hasUnseenColors = false
+                }
+
+                // notification dot
+                Rectangle {
+                    anchors.top: parent.top
+                    anchors.right: parent.right
+                    anchors.topMargin: 3
+                    anchors.rightMargin: 6
+
+                    width: 6
+                    height: 6
+                    radius: 3
+
+                    color: Material.accent
+                    visible: AppState.hasUnseenColors
+
+                    SequentialAnimation on opacity {
+                        running: AppState.hasUnseenColors
+                        loops: 3
+
+                        NumberAnimation { to: 0.3; duration: 600; easing.type: Easing.InOutQuad }
+                        NumberAnimation { to: 1.0; duration: 600; easing.type: Easing.InOutQuad }
+                    }
+                }
             }
         }
     }

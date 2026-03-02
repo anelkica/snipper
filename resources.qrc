@@ -3,5 +3,6 @@
         <file>icons/lucide/lucide.ttf</file>
         <file>qml/components/window/FloatingImageWindow.qml</file>
         <file>qml/pages/PalettePage.qml</file>
+        <file>icons/favicon.ico</file>
     </qresource>
 </RCC>

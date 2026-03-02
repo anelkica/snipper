@@ -13,10 +13,11 @@ ApplicationWindow {
     minimumWidth: 512
     minimumHeight: 256
     visible: true
-    flags: Qt.Window | Qt.FramelessWindowHint
+    flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowMinMaxButtonsHint
 
     color: "transparent"
     Material.theme: Material.Dark
+    Material.accent: Material.Purple
 
     Component.onCompleted: {
         Navigator.setStackView(stackView)
@@ -24,6 +25,17 @@ ApplicationWindow {
 
     FontLoader {
         source: "qrc:/icons/lucide/lucide.ttf"
+    }
+
+    Shortcut {
+        sequence: "Escape"
+        enabled: AppState.isPickingColor
+        onActivated: AppState.isPickingColor = false
+    }
+
+    Shortcut {
+        sequence: "Ctrl+R"
+        onActivated: WindowManager.requestRaiseAllPins()
     }
 
     Connections {
@@ -137,11 +149,10 @@ ApplicationWindow {
             function onColorAccepted(hex) {
                 AppState.isPickingColor = false
 
-                //let success = SnipperManager.requestCopyTextToClipboard(hex)
-                //if (!success) return;
+                if (Navigator.currentPage !== "pages/PalettePage.qml")
+                    AppState.hasUnseenColors = true
 
                 ColorHistory.add(hex)
-                //notify(`Added ${hex} to color palette`)
             }
         }
     }
@@ -176,7 +187,7 @@ ApplicationWindow {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 1
+        anchors.margins: root.visibility === Window.Maximized ? 0 : 1 // make sure there's enough padding for window border
         spacing: 0
 
         Titlebar {
@@ -204,9 +215,11 @@ ApplicationWindow {
     DragHandler {
         target: null
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+        enabled: root.visibility !== Window.Maximized
         onActiveChanged: if (active) root.startSystemMove()
     }
 
-
-    WindowResizeHandlers {}
+    WindowResizeHandlers {
+        visible: root.visibility !== Window.Maximized
+    }
 }

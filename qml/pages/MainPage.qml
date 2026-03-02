@@ -22,9 +22,36 @@ Rectangle {
         }
     }
 
+    Item {
+        anchors.centerIn: parent
+        visible: AppState.currentScreenshotUrl === ""
+
+        ColumnLayout {
+            anchors.centerIn: parent
+            spacing: 8
+
+            Label {
+                text: Icons.scissors
+                font.family: Icons.family
+                font.pixelSize: 32
+                color: Qt.rgba(1, 1, 1, 0.15)
+                Layout.alignment: Qt.AlignHCenter
+            }
+
+            Label {
+                text: "Click to take a snip"
+                font.pixelSize: 12
+                color: Qt.rgba(1, 1, 1, 0.3)
+                font.letterSpacing: 0.5
+                Layout.alignment: Qt.AlignHCenter
+            }
+        }
+    }
+
     Image {
         id: previewImage
         anchors.centerIn: parent
+        anchors.margins: 1
         source: AppState.currentScreenshotUrl
         fillMode: Image.PreserveAspectFit
         width: parent.width - 32
@@ -47,6 +74,17 @@ Rectangle {
                 id: imageHover
             }
         }
+    }
+
+    // image border
+    Rectangle {
+        anchors.centerIn: parent
+        width: previewImage.paintedWidth + 2
+        height: previewImage.paintedHeight + 2
+        color: "transparent"
+        border.color: Qt.rgba(1, 1, 1, 0.08)
+        border.width: 1
+        visible: previewImage.visible
     }
 
     // floating action bar for image

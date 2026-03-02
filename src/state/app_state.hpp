@@ -35,6 +35,7 @@ class AppState : public QObject
 
     QML_PROPERTY(bool, isSnipping, false)
     QML_PROPERTY(bool, isPickingColor, false)
+    QML_PROPERTY(bool, hasUnseenColors, false) // palette got updated with new colors
 
 
 public:

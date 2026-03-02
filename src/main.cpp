@@ -10,6 +10,7 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
     QQuickStyle::setStyle("Material");
+    app.setWindowIcon(QIcon("://icons/favicon.ico"));
 
     QQmlApplicationEngine engine;
     QObject::connect(
