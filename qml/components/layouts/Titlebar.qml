@@ -72,12 +72,6 @@ ToolBar {
             Layout.topMargin: 4
 
             WindowToolButton {
-                text: Icons.chevronLeft
-                visible: Navigator.canGoBack
-                onClicked: Navigator.pop()
-            }
-
-            WindowToolButton {
                 text: Icons.scissors
                 onClicked: AppState.isSnipping = true
             }
@@ -161,11 +155,16 @@ ToolBar {
             }
 
             WindowToolButton {
-                text: Icons.palette
+                text: Navigator.canGoBack ? Icons.chevronLeft : Icons.palette
                 iconColor: AppState.hasUnseenColors ? Material.accent : Material.foreground
                 onClicked: {
-                    Navigator.push("pages/PalettePage.qml")
+                    let isAlreadyOnPage = Navigator.currentPage === "pages/PalettePage.qml";
+
                     AppState.hasUnseenColors = false
+                    if (isAlreadyOnPage)
+                        Navigator.pop();
+                    else
+                        Navigator.push("pages/PalettePage.qml")
                 }
 
                 // notification dot

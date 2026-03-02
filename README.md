@@ -1,7 +1,11 @@
 # ✂️ snipper
+![C++](https://img.shields.io/badge/C++-23-blue?style=flat-square&logo=c%2B%2B)
+![Qt](https://img.shields.io/badge/Qt-6.10-41CD52?style=flat-square&logo=qt)
+
+
 A minimalist, useful and performant screen capture utility made with C++ and Qt QML.
 
-[⟹ See screenshots - no pun intended](#-screenshots)
+[⟹ See screenshots... no pun intended](#-screenshots)
 
 ## 🛠️ Installation
 ### Requirements
@@ -41,39 +45,34 @@ Open the `snipper` folder in Qt Creator IDE to build and run the application.
 - Annotation
 
 ## 📸 Screenshots
-### snipper UI
-- The UI is subject to frequent changes, as such, these visuals may not always reflect the current state!
+### Selecting various options
 <div align="center">
-    <img width="390" height="261" src="https://github.com/user-attachments/assets/04b8bd04-1c3d-43f0-9edf-59a25798bca0">
+    <img width="362" height="183" src="https://github.com/user-attachments/assets/262b3a6e-5bde-4dc1-a691-4a5241a7a364">
 </div>
+
 
 ### Snipping and magnification
 <div align="center">
     <img width="342" height="342" src="https://github.com/user-attachments/assets/9c7c2768-a847-4c75-9c56-e6d631c2e432">
-    <p><i>scroll to magnify</i></p>
+    <p><i>Scroll to magnify</i></p>
 </div>
 
-### System-wide color picker
+### Screen-wide color picker + history
 <div align="center">
-    <img width="372" height="370" src="https://github.com/user-attachments/assets/96d57f81-8792-49c4-b81d-b093f6cf0065">
-    <p><i>copies to clipboard</i></p>
+    <img width="604" height="216" src="https://github.com/user-attachments/assets/0337629d-4472-4f9e-8995-df9082fccbd2">
 </div>
 
-### Color picker history
+### Pinnable snips
 <div align="center">
-    <img width="336" height="301" src="https://github.com/user-attachments/assets/8df14576-74c8-4c38-aa39-83f4e28ead4f">
+    <img width="669" height="348" src="https://github.com/user-attachments/assets/9c3559ea-7d39-4989-a4a2-42a6e42f83d6">
+    <p><i>Scroll to reduce opacity, right click to open menu</i></p>
 </div>
 
-### Creating pinnable images
+### Click-through usage example
 <div align="center">
-    <img width="428" height="369" src="https://github.com/user-attachments/assets/bb21fe3d-3f27-47e2-b9ee-9a0b573965d8">
-    <p><i>right click to open a menu!</i></p>
+    <img width="673" height="430" src="https://github.com/user-attachments/assets/9fa69ddd-c8f1-479e-8db9-316d44c3a2f3">
+    <p><i>CTRL+R in the application to reset click-through pins</i></p>
 </div>
 
-### Opacity and click-through magic for pinnables
-<div align="center">
-    <img width="336.5" height="406" src="https://github.com/user-attachments/assets/30b3d820-68db-4fbd-8ae2-005e36c7063e">
-    <p><i>scroll to increase or lower opacity</i></p>
-</div>
-
-
+## 💛 Credits
+* Icons provided by [Lucide](https://lucide.dev/icons/)
