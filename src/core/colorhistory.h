@@ -4,7 +4,6 @@
 #include <QObject>
 #include <QQmlEngine>
 
-
 class ColorHistory : public QObject
 {
     Q_OBJECT

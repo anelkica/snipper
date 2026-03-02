@@ -30,19 +30,40 @@ Window {
     Material.theme: Material.Dark
     color: "transparent"
 
+    property url cachedScreenshotUrl // prevents the image from becoming distorted
+
     property rect selection: Qt.rect(0, 0, 0, 0)
     property point startPoint
 
-    property alias selectionType: selectionCanvasToolbar.selectionType
+    property alias selectionType: snippingOverlayToolbar.selectionType
 
     property real zoomLevel: 1.0
     property bool isDragging: false
 
-    signal stopCapturing()
+    signal stopCapturing() // Main.qml Loader listens for this
+
+    function finishCapturing(croppedRect) {
+        SnipperManager.requestSaveCroppedRegion(AppState.currentScreenshotUrl, croppedRect, canvasRoot.zoomLevel)
+        canvasRoot.isDragging = false
+        canvasRoot.zoomLevel = 1.0
+        flashAnimation.start()
+    }
 
     function declineCapturing() {
         AppState.currentScreenshotUrl = ""
         canvasRoot.stopCapturing()
+    }
+
+    Component.onCompleted: {
+        Qt.callLater(() => {
+            cachedScreenshotUrl = AppState.currentScreenshotUrl
+        })
+
+        if (AppSettings.selectionType !== "fullscreen") return;
+
+        Qt.callLater(() => {
+            finishCapturing(Qt.rect(0, 0, Screen.width * Screen.devicePixelRatio, Screen.height * Screen.devicePixelRatio))
+        })
     }
 
     Shortcut {
@@ -50,11 +71,31 @@ Window {
         onActivated: declineCapturing()
     }
 
-    SelectionCanvasToolbar {
-        id: selectionCanvasToolbar
+    SnippingOverlayToolbar {
+        id: snippingOverlayToolbar
 
         isDragging: canvasRoot.isDragging
         onCapturingDeclined: declineCapturing()
+        visible: AppSettings.selectionType !== "fullscreen" // user chose fullscreen on main page, so hide it!
+    }
+
+    Rectangle {
+        id: flashOverlay
+        anchors.fill: parent
+        color: "white"
+        opacity: 0
+        z: 3
+
+        NumberAnimation {
+            id: flashAnimation
+            target: flashOverlay
+            property: "opacity"
+            from: 0.8
+            to: 0.0
+            duration: 200
+            easing.type: Easing.OutCubic
+            onStopped: canvasRoot.stopCapturing()
+        }
     }
 
     // -- LAYER 1 -> DARKENED IMAGE
@@ -62,15 +103,17 @@ Window {
         id: background
 
         anchors.fill: parent
-        source: AppState.currentScreenshotUrl
+        source: cachedScreenshotUrl
         sourceSize.width: Screen.width * Screen.devicePixelRatio // without dpr, the screenshot is blurry
         sourceSize.height: Screen.height * Screen.devicePixelRatio
         cache: false
 
         // dimming
         Rectangle {
+            id: backgroundDimming
             anchors.fill: parent
-            color: "#95000000"
+            color: "black"
+            opacity: 0.65
         }
     }
 
@@ -115,11 +158,11 @@ Window {
     // DRAGGING / ZOOMING
     MouseArea {
         anchors.fill: parent
-        cursorShape: selectionCanvasToolbar.selectionType === "fullscreen" ? Qt.ArrowCursor : Qt.CrossCursor
+        cursorShape: snippingOverlayToolbar.selectionType === "fullscreen" ? Qt.ArrowCursor : Qt.CrossCursor
         hoverEnabled: true
 
         onPressed: (mouse) => {
-            if (selectionCanvasToolbar.selectionType === "fullscreen") return;
+            if (snippingOverlayToolbar.selectionType === "fullscreen") return;
 
             canvasRoot.isDragging = true
             canvasRoot.startPoint = Qt.point(mouse.x, mouse.y)
@@ -127,7 +170,7 @@ Window {
         }
 
         onWheel: (wheel) => {
-            if (selectionCanvasToolbar.selectionType === "fullscreen") return;
+            if (snippingOverlayToolbar.selectionType === "fullscreen") return;
 
             if (wheel.angleDelta.y > 0)
                 canvasRoot.zoomLevel = Math.min(canvasRoot.zoomLevel + 0.25, 5.0)
@@ -136,7 +179,7 @@ Window {
         }
 
         onPositionChanged: (mouse) => {
-            if (selectionCanvasToolbar.selectionType === "fullscreen") return;
+            if (snippingOverlayToolbar.selectionType === "fullscreen") return;
             if (!pressed) return;
 
             canvasRoot.selection = Qt.rect(
@@ -175,8 +218,9 @@ Window {
             }
 
 
-            if (selectionCanvasToolbar.selectionType === "fullscreen") {
-                save(Qt.rect(0, 0, Screen.width * Screen.devicePixelRatio, Screen.height * Screen.devicePixelRatio))
+            if (snippingOverlayToolbar.selectionType === "fullscreen") {
+                //save(Qt.rect(0, 0, Screen.width * Screen.devicePixelRatio, Screen.height * Screen.devicePixelRatio))
+                finishCapturing(Qt.rect(0, 0, Screen.width * Screen.devicePixelRatio, Screen.height * Screen.devicePixelRatio))
                 return
             }
 
@@ -187,7 +231,8 @@ Window {
                 return
             }
 
-            save(getPhysicalCropRect())
+            //save(getPhysicalCropRect())
+            finishCapturing(getPhysicalCropRect())
         }
     }
 }

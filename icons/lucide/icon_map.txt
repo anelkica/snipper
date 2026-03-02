@@ -1,3 +1,6 @@
+https://lucide.dev/icons/
+
+
 Glyph Name                | QML Hex    | Decimal
 --------------------------------------------------
 activity                  | \ue038     | 57400   

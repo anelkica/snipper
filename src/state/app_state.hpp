@@ -1,10 +1,9 @@
-#pragma once
-#ifndef APP_SETTINGS_HPP
-#define APP_SETTINGS_HPP
+#ifndef APPSTATE_H
+#define APPSTATE_H
 
 #include <QObject>
-#include <QColor>
 #include <QQmlEngine>
+#include "window_manager.h"
 
 // macros are evil, but this requires like 60% less boilerplate code
 // this macro defines getters, setters and signals
@@ -23,14 +22,23 @@ Q_PROPERTY(type name READ name WRITE set##name NOTIFY name##Changed) \
     private: \
     type m_##name = defaultValue;
 
-class AppSettings : public QObject {
+
+class AppState : public QObject
+{
     Q_OBJECT
     QML_ELEMENT
     QML_SINGLETON
 
-    QML_PROPERTY(int, timerDelay, 0)
+
+    QML_PROPERTY(QUrl, currentScreenshotUrl, QUrl())
+    QML_PROPERTY(bool, isCurrentScreenshotPinned, false)
+
+    QML_PROPERTY(bool, isSnipping, false)
+    QML_PROPERTY(bool, isPickingColor, false)
+
+
 public:
-    explicit AppSettings(QObject *parent = nullptr) : QObject(parent) {}
+    explicit AppState(QObject *parent = nullptr) {}
 };
 
-#endif // APP_SETTINGS_HPP
+#endif // APPSTATE_H

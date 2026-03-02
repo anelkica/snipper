@@ -7,7 +7,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Quick)
 find_package(Qt6 REQUIRED COMPONENTS QuickControls2)
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
@@ -21,31 +20,33 @@ qt_add_qml_module(appsnipper
     URI snipper
     QML_FILES
         qml/Main.qml
-        qml/FloatingImageWindow.qml
         qml/Style.qml
         qml/Icons.qml
         # Components
-        qml/components/AppButton.qml
-        qml/components/WindowResizeHandlers.qml
-        qml/components/MainPageToolbar.qml
-        qml/components/SelectionCanvasToolbar.qml
         qml/components/Toast.qml
-        # Sub-folders
+
         qml/components/layouts/Titlebar.qml
+        qml/components/layouts/SnippingOverlayToolbar.qml
+
         qml/components/overlays/SnippingOverlay.qml
         qml/components/overlays/CountdownOverlay.qml
         qml/components/overlays/ColorPickerOverlay.qml
+
         qml/components/ui/WindowToolButton.qml
         qml/components/ui/DropdownMenu.qml
         qml/components/ui/DropdownMenuItem.qml
+
+        qml/components/window/FloatingImageWindow.qml
+        qml/components/window/WindowResizeHandlers.qml
         # Pages
         qml/pages/PalettePage.qml
         qml/pages/MainPage.qml
     SOURCES
-        src/snipper_manager.h src/snipper_manager.cpp
-        src/window_manager.h src/window_manager.cpp
-        src/colorhistory.h src/colorhistory.cpp
-        src/app_state.hpp src/app_settings.hpp
+        src/core/snipper_manager.h src/core/snipper_manager.cpp
+        src/core/colorhistory.h src/core/colorhistory.cpp
+        src/core/navigator.hpp
+        src/window/window_manager.h src/window/window_manager.cpp
+        src/state/app_state.hpp src/state/app_settings.hpp
     RESOURCES
         resources.qrc
 )
@@ -61,13 +62,12 @@ set_target_properties(appsnipper PROPERTIES
     WIN32_EXECUTABLE TRUE
 )
 
-target_include_directories(appsnipper PRIVATE src)
+target_include_directories(appsnipper PRIVATE src src/core src/window src/state)
 
-target_link_libraries(appsnipper
-    PRIVATE Qt6::Quick
+target_link_libraries(appsnipper PRIVATE
+    Qt6::Quick
+    Qt6::QuickControls2
 )
-target_link_libraries(appsnipper PRIVATE Qt6::Widgets)
-target_link_libraries(appsnipper PRIVATE Qt6::QuickControls2)
 
 include(GNUInstallDirs)
 install(TARGETS appsnipper

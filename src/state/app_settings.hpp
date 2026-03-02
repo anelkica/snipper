@@ -1,7 +1,9 @@
-#ifndef APPSTATE_H
-#define APPSTATE_H
+#pragma once
+#ifndef APP_SETTINGS_HPP
+#define APP_SETTINGS_HPP
 
 #include <QObject>
+#include <QColor>
 #include <QQmlEngine>
 
 // macros are evil, but this requires like 60% less boilerplate code
@@ -21,21 +23,15 @@ Q_PROPERTY(type name READ name WRITE set##name NOTIFY name##Changed) \
     private: \
     type m_##name = defaultValue;
 
-
-class AppState : public QObject
-{
+class AppSettings : public QObject {
     Q_OBJECT
     QML_ELEMENT
     QML_SINGLETON
 
-
-    QML_PROPERTY(QUrl, currentScreenshotUrl, QUrl())
-
-    QML_PROPERTY(bool, isSnipping, false)
-    QML_PROPERTY(bool, isPickingColor, false)
-
+    QML_PROPERTY(int, timerDelay, 0)
+    QML_PROPERTY(QString, selectionType, "rectangle") // available types: "rectangle", "fullscreen"
 public:
-    explicit AppState(QObject *parent = nullptr) {};
+    explicit AppSettings(QObject *parent = nullptr) : QObject(parent) {}
 };
 
-#endif // APPSTATE_H
+#endif // APP_SETTINGS_HPP

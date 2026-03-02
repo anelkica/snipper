@@ -4,7 +4,9 @@
 #include <QGuiApplication>
 #include <expected>
 
-WindowManager::WindowManager(QObject *parent): QObject{parent} {}
+WindowManager::WindowManager(QObject *parent): QObject{parent} {
+    s_instance = this;
+}
 
 std::expected<QQuickWindow*, QString> WindowManager::createPinWindow(const QUrl &imageSourceUrl) {
     if (!m_engine)
@@ -18,7 +20,7 @@ std::expected<QQuickWindow*, QString> WindowManager::createPinWindow(const QUrl 
     if (existingWindow)
         return std::unexpected("Can't have duplicate pins!");
 
-    QQmlComponent component(m_engine, QUrl("qrc:/qml/FloatingImageWindow.qml")); // i forgot to add this shit to cmake oml.
+    QQmlComponent component(m_engine, QUrl("qrc:/qml/components/window/FloatingImageWindow.qml")); // this shit needs to be put in resources.qrc, not cmake. why qt? why must you torment
     if (component.isError())
         return std::unexpected("QML Component Error:" + component.errorString());
 
@@ -43,6 +45,7 @@ std::expected<QQuickWindow*, QString> WindowManager::createPinWindow(const QUrl 
     connect(window, &QQuickWindow::closing, this, [this, imageSourceUrl] {
         // when exited, clean up the list containg all pinned windows
         m_pinnedWindows.remove(imageSourceUrl);
+        emit pinRemoved(imageSourceUrl); // usually i don't signal in the backend, but, there's no way else to announce this removal
     });
 
     QRect screenGeometry = screen->geometry();
@@ -100,6 +103,17 @@ std::expected<qsizetype, QString> WindowManager::raiseAllPins() {
 }
 
 // == QML SIDE == //
+bool WindowManager::requestWindowExists(const QUrl &imageSourceUrl) {
+    auto iterator = m_pinnedWindows.find(imageSourceUrl);
+    if (iterator == m_pinnedWindows.end()) return false;
+    if (iterator->isNull()) {
+        m_pinnedWindows.erase(iterator); // just in case it wasn't flagged by WindowManager for deletion
+        return false;
+    }
+
+    return true;
+}
+
 void WindowManager::requestCreatePinWindow(const QUrl &imageSourceUrl) {
 
     if (imageSourceUrl.isEmpty()) {
@@ -110,6 +124,7 @@ void WindowManager::requestCreatePinWindow(const QUrl &imageSourceUrl) {
     auto result = createPinWindow(imageSourceUrl);
     if (!result) {
         emit errorOccurred(result.error());
+        qDebug() << "requestCreatePinWindow failed:" << result.error();
         return;
     }
 
@@ -126,8 +141,8 @@ void WindowManager::requestRaiseAllPins() {
 
 void WindowManager::requestRemovePinWindow(const QUrl &imageSourceUrl) {
     auto result = removePinWindow(imageSourceUrl);
-    if (result)
-        emit pinRemoved();
+    if (result) {}
+        //emit pinRemoved(imageSourceUrl); // removePinWindow() emits this signal now via &QQuickWindow::closing connection
     else
         emit errorOccurred(result.error());
 }

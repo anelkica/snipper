@@ -68,8 +68,38 @@ ToolBar {
             Layout.topMargin: 4
 
             WindowToolButton {
-                text: Icons.plus
+                text: Icons.chevronLeft
+                visible: Navigator.canGoBack
+                onClicked: Navigator.pop()
+            }
+
+            WindowToolButton {
+                text: Icons.scissors
                 onClicked: AppState.isSnipping = true
+            }
+
+            WindowToolButton {
+                text: AppSettings.selectionType === "fullscreen" ? Icons.fullscreen : Icons.region
+                iconColor: AppSettings.selectionType !== "rectangle" ? Material.accent : Material.foreground
+                onClicked: selectionMenu.open()
+
+                DropdownMenu {
+                    id: selectionMenu
+
+                    DropdownMenuItem {
+                        iconText: Icons.region
+                        text: "Rectangle"
+                        isSelected: AppSettings.selectionType === "rectangle"
+                        onTriggered: AppSettings.selectionType = "rectangle"
+                    }
+
+                    DropdownMenuItem {
+                        iconText: Icons.fullscreen
+                        text: "Fullscreen"
+                        isSelected: AppSettings.selectionType === "fullscreen"
+                        onTriggered: AppSettings.selectionType = "fullscreen"
+                    }
+                }
             }
 
             WindowToolButton {
@@ -128,6 +158,7 @@ ToolBar {
 
             WindowToolButton {
                 text: Icons.palette
+                onClicked: Navigator.push("pages/PalettePage.qml")
             }
         }
     }

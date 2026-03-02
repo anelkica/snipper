@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Dialogs
 import QtQuick.Layouts
 
 import snipper // SnipperManager, WindowManager
@@ -16,6 +17,10 @@ ApplicationWindow {
 
     color: "transparent"
     Material.theme: Material.Dark
+
+    Component.onCompleted: {
+        Navigator.setStackView(stackView)
+    }
 
     FontLoader {
         source: "qrc:/icons/lucide/lucide.ttf"
@@ -41,6 +46,12 @@ ApplicationWindow {
     }
 
     Connections {
+        target: Navigator
+        function onPushRequested(url) { stackView.push(url) }
+        function onPopRequested() { stackView.pop() }
+    }
+
+    Connections {
         target: SnipperManager
         function onScreenshotCaptured(screenshotUrl, currentScreen) {
             if (snippingOverlayLoader.active) return;
@@ -56,6 +67,17 @@ ApplicationWindow {
 
         function onCropSaved(croppedImageUrl) {
             AppState.currentScreenshotUrl = croppedImageUrl
+            AppState.isCurrentScreenshotPinned = false
+        }
+    }
+
+    Connections {
+        target: WindowManager
+        function onPinRemoved(imageUrl) {
+            // if the user unpins via ALT+F4, context menu or whichever means
+            if (imageUrl.toString() === AppState.currentScreenshotUrl.toString()) {
+                AppState.isCurrentScreenshotPinned = false
+            }
         }
     }
 
@@ -146,7 +168,7 @@ ApplicationWindow {
         Layout.fillHeight: true
         color: Material.backgroundColor
 
-        border.color: Qt.rgba(1, 1, 1, 0.04)
+        border.color: Qt.rgba(1, 1, 1, 0.08)
         border.width: 1
     }
 
@@ -171,92 +193,11 @@ ApplicationWindow {
             }
         }
 
-        Rectangle {
+        StackView {
+            id: stackView
             Layout.fillWidth: true
             Layout.fillHeight: true
-            color: Material.backgroundColor
-
-            Image {
-                id: previewImage
-                anchors.centerIn: parent
-                source: AppState.currentScreenshotUrl
-                fillMode: Image.PreserveAspectFit
-                width: parent.width - 32
-                height: parent.height - 32
-                visible: AppState.currentScreenshotUrl !== ""
-
-                // hover handler wrapper to make sure hover only procs on image hover
-                Item {
-                    anchors.centerIn: parent
-                    width: previewImage.paintedWidth
-                    height: previewImage.paintedHeight
-
-                    HoverHandler {
-                        id: imageHover
-                    }
-                }
-            }
-
-            // floating action bar for image
-            Rectangle {
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.bottom: previewImage.bottom
-                anchors.bottomMargin: 16
-
-                visible: AppState.currentScreenshotUrl !== ""
-                opacity: imageHover.hovered || barHover.hovered ? 1.0 : 0.0
-
-                width: actionRow.implicitWidth + 16
-                height: 36
-                radius: 4
-                color: Material.color(Material.Grey, Material.Shade900)
-                border.color: Qt.rgba(1, 1, 1, 0.12)
-                border.width: 1
-
-                HoverHandler {
-                    id: barHover
-                }
-
-                Behavior on opacity {
-                    NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
-                }
-
-                RowLayout {
-                    id: actionRow
-                    anchors.centerIn: parent
-                    spacing: 2
-
-                    WindowToolButton {
-                        text: Icons.copy
-                        btnRadius: 4
-                        Layout.preferredWidth: 32
-                        Layout.preferredHeight: 28
-                        // onClicked:
-                    }
-
-                    Rectangle {
-                        width: 1; height: 16
-                        color: Qt.rgba(1, 1, 1, 0.12)
-                        Layout.alignment: Qt.AlignVCenter
-                    }
-
-                    WindowToolButton {
-                        text: Icons.pin
-                        btnRadius: 4
-                        Layout.preferredWidth: 32
-                        Layout.preferredHeight: 28
-                        // onClicked:
-                    }
-
-                    WindowToolButton {
-                        text: Icons.save
-                        btnRadius: 4
-                        Layout.preferredWidth: 32
-                        Layout.preferredHeight: 28
-                        // onClicked:
-                    }
-                }
-            }
+            initialItem: "pages/MainPage.qml"
         }
     }
 

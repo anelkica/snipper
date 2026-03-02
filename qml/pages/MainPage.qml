@@ -1,41 +1,124 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Dialogs
 import QtQuick.Controls
 import snipper
 
-Item {
-    id: mainPage
+Rectangle {
+    Layout.fillWidth: true
+    Layout.fillHeight: true
+    color: Material.backgroundColor
 
-    signal snipClicked()
+    FileDialog {
+        id: saveCropDialog
+        title: "Save Snip As"
+        fileMode: FileDialog.SaveFile
+        nameFilters: ["Image files (*.png *.jpg)", "All files (*)"]
+        currentFile: "snip" + ".png"
+        defaultSuffix: "png"
 
-    ColumnLayout {
-        anchors.fill: parent
-        spacing: 0
+        onAccepted: {
+            SnipperManager.requestSaveCropAs(AppState.currentScreenshotUrl, saveCropDialog.selectedFile)
+        }
+    }
 
-        MainPageToolbar {
-            id: toolbar
+    Image {
+        id: previewImage
+        anchors.centerIn: parent
+        source: AppState.currentScreenshotUrl
+        fillMode: Image.PreserveAspectFit
+        width: parent.width - 32
+        height: parent.height - 32
+        visible: AppState.currentScreenshotUrl !== ""
 
-            onSnipClicked: mainPage.snipClicked()
+        scale: (copyBtn.pressed || pinBtn.pressed || saveBtn.pressed) ? 0.97 : 1.0 // if buttons are held/pressed, so is image
+
+        Behavior on scale {
+            NumberAnimation { duration: 80; easing.type: Easing.OutCubic }
         }
 
-        // preview of last snip
+        // hover handler wrapper to make sure hover only procs on image hover
         Item {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            Layout.margins: 20
+            anchors.centerIn: parent
+            width: previewImage.paintedWidth
+            height: previewImage.paintedHeight
 
-            // these margins are for the bottom buttons (Palette button)
-            Layout.leftMargin: 56
-            Layout.rightMargin: 56
+            HoverHandler {
+                id: imageHover
+            }
+        }
+    }
 
-            Image {
-                id: preview
-                anchors.fill: parent
-                fillMode: Image.PreserveAspectFit
-                source: AppState.currentScreenshotUrl
-                smooth: true; mipmap: true; //antialiasing: true
-                sourceSize.width: -1
-                sourceSize.height: -1
+    // floating action bar for image
+    Rectangle {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: previewImage.bottom
+        anchors.bottomMargin: 16
+
+        visible: AppState.currentScreenshotUrl !== ""
+        opacity: imageHover.hovered || barHover.hovered ? 1.0 : 0.0
+
+        width: actionRow.implicitWidth + 16
+        height: 36
+        radius: 4
+        color: Material.color(Material.Grey, Material.Shade900)
+        border.color: Qt.rgba(1, 1, 1, 0.12)
+        border.width: 1
+
+        HoverHandler {
+            id: barHover
+        }
+
+        Behavior on opacity {
+            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+        }
+
+        RowLayout {
+            id: actionRow
+            anchors.centerIn: parent
+            spacing: 2
+
+            WindowToolButton {
+                id: copyBtn
+                text: Icons.copy
+                btnRadius: 4
+                Layout.preferredWidth: 32
+                Layout.preferredHeight: 28
+                onClicked: SnipperManager.requestCopyImageToClipboard(AppState.currentScreenshotUrl)
+            }
+
+            Rectangle {
+                width: 1; height: 16
+                color: Qt.rgba(1, 1, 1, 0.12)
+                Layout.alignment: Qt.AlignVCenter
+            }
+
+            WindowToolButton {
+                id: pinBtn
+                text: AppState.isCurrentScreenshotPinned ? Icons.pinOff : Icons.pin
+                btnRadius: 4
+                Layout.preferredWidth: 32
+                Layout.preferredHeight: 28
+                onClicked: {
+                    let windowExists = WindowManager.requestWindowExists(AppState.currentScreenshotUrl)
+
+                    if (windowExists) {
+                        WindowManager.requestRemovePinWindow(AppState.currentScreenshotUrl)
+                        AppState.isCurrentScreenshotPinned = false
+                    } else {
+                        WindowManager.requestCreatePinWindow(AppState.currentScreenshotUrl)
+                        AppState.isCurrentScreenshotPinned = true
+                    }
+                }
+            }
+
+            WindowToolButton {
+                id: saveBtn
+                text: Icons.save
+                btnRadius: 4
+                Layout.preferredWidth: 32
+                Layout.preferredHeight: 28
+                onClicked: if (AppState.currentScreenshotUrl !== "") saveCropDialog.open()
             }
         }
     }
