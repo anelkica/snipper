@@ -9,6 +9,11 @@ Rectangle {
     Layout.fillHeight: true
     color: Material.backgroundColor
 
+    // for animating the image for visual feedback
+    function triggerImageAnimation() {
+        imageBounceAnimation.restart()
+    }
+
     FileDialog {
         id: saveCropDialog
         title: "Save Snip As"
@@ -50,18 +55,44 @@ Rectangle {
 
     Image {
         id: previewImage
+        property int imageMargin: 48
+
         anchors.centerIn: parent
-        anchors.margins: 1
         source: AppState.currentScreenshotUrl
         fillMode: Image.PreserveAspectFit
-        width: parent.width - 32
-        height: parent.height - 32
+        width: parent.width - imageMargin
+        height: parent.height - imageMargin
         visible: AppState.currentScreenshotUrl !== ""
 
-        scale: (copyBtn.pressed || pinBtn.pressed || saveBtn.pressed) ? 0.97 : 1.0 // if buttons are held/pressed, so is image
+        smooth: true
+        mipmap: true
 
-        Behavior on scale {
-            NumberAnimation { duration: 80; easing.type: Easing.OutCubic }
+        //scale: (copyBtn.pressed || pinBtn.pressed || saveBtn.pressed) ? 0.97 : 1.0 // if buttons are held/pressed, so is image
+        scale: 1.0
+
+        //Behavior on scale {
+            //NumberAnimation { duration: 80; easing.type: Easing.OutCubic }
+        //}
+
+        SequentialAnimation {
+            id: imageBounceAnimation
+            running: false
+
+            NumberAnimation {
+                target: previewImage
+                property: "scale"
+                to: 0.97
+                duration: 100
+                easing.type: Easing.InBack
+            }
+
+            NumberAnimation {
+                target: previewImage
+                property: "scale"
+                to: 1.0
+                duration: 200
+                easing.type: Easing.InOutBack
+            }
         }
 
         // hover handler wrapper to make sure hover only procs on image hover
@@ -74,17 +105,17 @@ Rectangle {
                 id: imageHover
             }
         }
-    }
 
-    // image border
-    Rectangle {
-        anchors.centerIn: parent
-        width: previewImage.paintedWidth + 2
-        height: previewImage.paintedHeight + 2
-        color: "transparent"
-        border.color: Qt.rgba(1, 1, 1, 0.08)
-        border.width: 1
-        visible: previewImage.visible
+        // image border
+        Rectangle {
+            anchors.centerIn: parent
+            width: previewImage.paintedWidth + 2
+            height: previewImage.paintedHeight + 2
+            color: "transparent"
+            border.color: Qt.rgba(1, 1, 1, 0.08)
+            border.width: 1
+            visible: previewImage.visible
+        }
     }
 
     // floating action bar for image
@@ -122,7 +153,10 @@ Rectangle {
                 btnRadius: 4
                 Layout.preferredWidth: 32
                 Layout.preferredHeight: 28
-                onClicked: SnipperManager.requestCopyImageToClipboard(AppState.currentScreenshotUrl)
+                onClicked: {
+                    SnipperManager.requestCopyImageToClipboard(AppState.currentScreenshotUrl)
+                    imageBounceAnimation.restart()
+                }
             }
 
             Rectangle {
@@ -147,6 +181,8 @@ Rectangle {
                         WindowManager.requestCreatePinWindow(AppState.currentScreenshotUrl)
                         AppState.isCurrentScreenshotPinned = true
                     }
+
+                    imageBounceAnimation.restart()
                 }
             }
 
@@ -156,7 +192,10 @@ Rectangle {
                 btnRadius: 4
                 Layout.preferredWidth: 32
                 Layout.preferredHeight: 28
-                onClicked: if (AppState.currentScreenshotUrl !== "") saveCropDialog.open()
+                onClicked: {
+                    if (AppState.currentScreenshotUrl !== "") saveCropDialog.open()
+                    imageBounceAnimation.restart()
+                }
             }
         }
     }

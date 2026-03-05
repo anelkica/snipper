@@ -44,7 +44,8 @@ public:
 signals:
     void screenshotCaptured(const QUrl &screenshotUrl, QScreen *currentScreen);
 
-    void cropSaved(const QUrl &croppedImageUrl);
+    void cropSaved(const QUrl &croppedImageUrl); // cached in temp folder
+    void cropSavedAs(const QUrl &savedPath); // saved on disk
     void cropCopiedToClipboard();
 
     void colorPicked(QPoint globalCursorPosition, const QColor &color, const QString &hexColor);

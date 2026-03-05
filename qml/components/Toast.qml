@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Effects
 import snipper
 
 Rectangle {
@@ -8,43 +9,114 @@ Rectangle {
 
     parent: Overlay.overlay
     anchors.bottom: parent.bottom
-    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.left: parent.left
     anchors.bottomMargin: 20
+    anchors.leftMargin: 20
 
-    width: toastLayout.implicitWidth + 32
-    height: 36
-    radius: Style.radius
-    color: Qt.lighter(Style.bgPrimary, 1.2)
-    border.color: Style.windowBorder
+    implicitWidth: Math.min(toastLayout.implicitWidth + 32, 280)
+    implicitHeight: 44
+    radius: 4
+    color: Material.backgroundColor
+    border.color: Material.color(Material.Grey, Material.Shade800)
     border.width: 1
 
     visible: opacity > 0
     opacity: 0
 
-    function show(message, isError) {
+    property bool isError: false
+    property real slideOffset: 20
+
+    function show(message, _isError = false) {
         toastLabel.text = message
-        toastLabel.color = isError ? Qt.lighter(Style.failure, 1.3) : Qt.lighter(Style.success, 1.3)
+        isError = _isError
+        iconLabel.text = isError ? Icons.close : Icons.check
+        iconLabel.color = isError
+            ? Material.color(Material.Red, Material.Shade400)
+            : Material.color(Material.Green, Material.Shade400)
+
+        opacity = 0
+        slideOffset = 20
         toastAnimation.restart()
+    }
+
+    HoverHandler {
+        id: hoverHandler
+        cursorShape: Qt.PointingHandCursor
+        onHoveredChanged: {
+            if (hoverHandler.hovered) {
+                toastAnimation.pause()
+            } else {
+                toastAnimation.resume()
+            }
+        }
     }
 
     RowLayout {
         id: toastLayout
         anchors.centerIn: parent
-        spacing: 8
+        spacing: 10
+
+        Label {
+            id: iconLabel
+            font.family: Icons.family
+            font.pixelSize: 18
+            Layout.alignment: Qt.AlignVCenter
+        }
 
         Label {
             id: toastLabel
-            font.italic: true
-            font.letterSpacing: 1
+            font.pixelSize: 13
+            font.letterSpacing: 0.5
+            color: Material.foreground
             Layout.alignment: Qt.AlignVCenter
+            Layout.maximumWidth: 280
+            wrapMode: Text.Wrap
+            elide: Text.ElideRight
         }
     }
 
-    SequentialAnimation on opacity {
+    SequentialAnimation {
         id: toastAnimation
         running: false
-        NumberAnimation { to: 1; duration: 200; easing.type: Easing.OutCubic }
+
+        ParallelAnimation {
+            NumberAnimation {
+                target: toast
+                property: "opacity"
+                to: 1
+                duration: 200
+                easing.type: Easing.OutCubic
+            }
+            NumberAnimation {
+                target: toast
+                property: "slideOffset"
+                to: 0
+                duration: 200
+                easing.type: Easing.OutCubic
+            }
+        }
+
         PauseAnimation { duration: 2000 }
-        NumberAnimation { to: 0; duration: 800; easing.type: Easing.InCubic }
+
+        ParallelAnimation {
+            NumberAnimation {
+                target: toast
+                property: "opacity"
+                to: 0
+                duration: 300
+                easing.type: Easing.InCubic
+            }
+            NumberAnimation {
+                target: toast
+                property: "slideOffset"
+                to: 20
+                duration: 300
+                easing.type: Easing.InCubic
+            }
+        }
+    }
+
+    transform: Translate {
+        y: toast.slideOffset
     }
 }

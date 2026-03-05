@@ -10,6 +10,7 @@ QtObject {
     readonly property string maximize:    "\ue167"
     readonly property string restore:     "\ue65a" // or "\ue657" (squares-exclude)
     readonly property string close:       "\ue1b2"
+    readonly property string check:       "\ue06c"
 
     readonly property string plus:        "\ue13d"
     readonly property string scissors:    "\ue14e"

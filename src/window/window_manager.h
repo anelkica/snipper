@@ -5,6 +5,9 @@
 #include <QObject>
 #include <QQUickWindow>
 #include <QQmlEngine>
+#include <QPointer>
+#include <QScreen>
+#include <QHash>
 
 class WindowManager : public QObject
 {

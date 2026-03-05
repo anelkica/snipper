@@ -7,6 +7,7 @@
 #include <QTimer>
 #include <QStandardPaths>
 #include <QDebug>
+#include <QPointer>
 #include <QDir>
 #include <QClipboard>
 
@@ -38,7 +39,7 @@ std::expected<QUrl, QString> SnipperManager::captureScreenshot(QQuickWindow *roo
     QString filename = QString("snip_%1.png").arg(QDateTime::currentMSecsSinceEpoch());
     QString fullPath = m_tempFolderPath + filename;
 
-    if (!screenshot.save(fullPath, "PNG")) return std::unexpected("Failed to save: " + fullPath);
+    if (!screenshot.save(fullPath, "PNG")) return std::unexpected("Failed to save: " + fullPath + " - ");
     return QUrl::fromLocalFile(fullPath);
 }
 
@@ -64,8 +65,10 @@ std::expected<QUrl, QString> SnipperManager::saveCroppedRegion(const QUrl &image
     QString filename = QString("snip_%1.png").arg(QDateTime::currentDateTime().toString("yyyyMMdd__hhmmss"));
     QString fullPath = m_tempFolderPath + filename;
 
-    if (!croppedImage.save(fullPath, "PNG"))
-        return std::unexpected("Failed to save: " + fullPath);
+    if (!croppedImage.save(fullPath, "PNG")) {
+        QFile file(fullPath);
+        return std::unexpected("Failed to save: " + fullPath + " - " + file.errorString());
+    }
 
     return QUrl::fromLocalFile(fullPath);
 }
@@ -112,8 +115,10 @@ std::expected<QUrl, QString> SnipperManager::saveCropAs(const QUrl &imageSource,
 
     if (QFile::exists(destinationPath)) {
         // QFile::copy fails when overwriting, so lets remove the guy
-        if (!QFile::remove(destinationPath))
-            return std::unexpected("Couldn't overwrite existing file"); // epic fail
+        if (!QFile::remove(destinationPath)) {
+            QFile file(destinationPath);
+            return std::unexpected("Couldn't overwrite: " + file.errorString()); // epic fail
+        }
     }
 
     if (sourceFile.copy(destinationPath))
@@ -154,22 +159,24 @@ void SnipperManager::requestCaptureScreenshot(QQuickWindow *rootWindow) {
     rootWindow->showMinimized();
 
     // 365ms waiting period for the window to minimize
-    QTimer::singleShot(365, this, [this, rootWindow] {
-        if (!rootWindow) return; // just in case tbh
+    QPointer<QQuickWindow> rootWindowPtr(rootWindow);
+    QTimer::singleShot(365, this, [this, rootWindowPtr] {
+        if (!rootWindowPtr) return; // just in case tbh
 
-        QScreen* screen = rootWindow->screen();
+        QScreen* screen = rootWindowPtr->screen();
         if (!screen) {
             emit errorOccurred("Monitor not found");
             return;
         }
 
-        auto result = captureScreenshot(rootWindow);
+        auto result = captureScreenshot(rootWindowPtr);
         if (result)
             emit screenshotCaptured(*result, screen);
         else
             emit errorOccurred(result.error());
 
-        rootWindow->showNormal();
+        if (rootWindowPtr)
+            rootWindowPtr->showNormal();
     });
 }
 
@@ -217,7 +224,7 @@ void SnipperManager::requestSaveCropAs(const QUrl &imageSource, const QUrl &user
 
     auto result = saveCropAs(imageSource, userSelectedPath);
     if (result)
-        qDebug();
+        emit cropSavedAs(*result);
     else
         emit errorOccurred(result.error());
 }

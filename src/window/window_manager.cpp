@@ -30,7 +30,7 @@ std::expected<QQuickWindow*, QString> WindowManager::createPinWindow(const QUrl 
 
     QQuickWindow *window = qobject_cast<QQuickWindow*>(object);
     if (!window) {
-        delete object;
+        object->deleteLater();
         return std::unexpected("Can't pin: failed to create window");
     }
 

@@ -10,8 +10,8 @@ ApplicationWindow {
 
     property int countdown: 0
 
-    minimumWidth: 512
-    minimumHeight: 256
+    minimumWidth: 578
+    minimumHeight: 320
     visible: true
     flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowMinMaxButtonsHint
 
@@ -36,6 +36,17 @@ ApplicationWindow {
     Shortcut {
         sequence: "Ctrl+R"
         onActivated: WindowManager.requestRaiseAllPins()
+    }
+
+    Shortcut {
+        sequence: "Ctrl+C"
+        onActivated: {
+            let page = stackView.currentItem
+            if (page && page.triggerImageAnimation)
+                page.triggerImageAnimation()
+
+            SnipperManager.requestCopyImageToClipboard(AppState.currentScreenshotUrl)
+        }
     }
 
     Connections {
@@ -77,19 +88,45 @@ ApplicationWindow {
             }
         }
 
+        // cache in temp
         function onCropSaved(croppedImageUrl) {
             AppState.currentScreenshotUrl = croppedImageUrl
             AppState.isCurrentScreenshotPinned = false
+            toast.show("Snipped", false)
+        }
+
+        function onCropSavedAs(fileUrl) {
+            toast.show("Saved", false)
+        }
+
+        function onCropCopiedToClipboard() {
+            toast.show("Copied to clipboard", false)
+        }
+
+        function onErrorOccurred(message) {
+            toast.show(message, true)
         }
     }
 
     Connections {
         target: WindowManager
         function onPinRemoved(imageUrl) {
-            // if the user unpins via ALT+F4, context menu or whichever means
             if (imageUrl.toString() === AppState.currentScreenshotUrl.toString()) {
                 AppState.isCurrentScreenshotPinned = false
+                toast.show("Pin removed", false)
             }
+        }
+
+        function onPinCreated(pinWindow) {
+            toast.show("Pin created", false)
+        }
+
+        function onRaisedAllPins(amountOfPins) {
+            toast.show("Raised " + amountOfPins + " pin" + (amountOfPins > 1 ? "s" : ""), false)
+        }
+
+        function onErrorOccurred(message) {
+            toast.show(message, true)
         }
     }
 
@@ -172,6 +209,10 @@ ApplicationWindow {
                 root.showNormal()
             }
         }
+    }
+
+    Toast {
+        id: toast
     }
 
     background: Rectangle {

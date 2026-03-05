@@ -24,6 +24,8 @@ int main(int argc, char *argv[])
     WindowManager* windowManager = engine.singletonInstance<WindowManager*>("snipper", "WindowManager");
     if (windowManager)
         windowManager->setEngine(&engine);
+    else
+        qWarning() << "Failed to init WindowManager";
 
     return app.exec();
 }
