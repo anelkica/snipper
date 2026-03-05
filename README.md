@@ -1,4 +1,5 @@
 # ✂️ snipper
+[![Download](https://img.shields.io/badge/download-latest-41CD522?style=flat-square&logo=github)](https://github.com/anelkica/snipper/releases/latest) <br />
 ![C++](https://img.shields.io/badge/C++-23-blue?style=flat-square&logo=c%2B%2B)
 ![Qt](https://img.shields.io/badge/Qt-6.10-41CD52?style=flat-square&logo=qt)
 
